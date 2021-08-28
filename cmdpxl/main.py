@@ -9,9 +9,8 @@ import pygame.font
 black, white, red = pg.Color(20, 20, 20), pg.Color(255, 255, 255), pg.Color(150, 0, 0)
 
 
-def resize_surface_by_percentage(surface: pg.Surface, percentage_of_screen: int) -> pg.Surface:
-    screen = pygame.display.get_surface()
-    new_image_resolution = [xy * percentage_of_screen // 100 for xy in (screen.get_width(), screen.get_height())]
+def resize_surface_by_percentage(surface: pg.Surface, percentage: int) -> pg.Surface:
+    new_image_resolution = [xy * percentage // 100 for xy in (surface.get_width(), surface.get_height())]
     return pg.transform.scale(surface, new_image_resolution)
 
 
@@ -63,19 +62,21 @@ def draw_welcome_msg(func):
     help="Image height and width separated by a comma, e.g. 20,10 for a 20x10 image. Note that no spaces can be used.",
 )
 def main(filepath, resolution):
-    img_size = list(
-        map(int, resolution.split(","))
-        if resolution
-        else map(int, (input(f"Image {x}: ") for x in ("width", "height")))
-    )
-
     pg.init()
     screen = pg.display.set_mode((600, 600), pg.RESIZABLE)
     app_name = click.get_current_context().command.name
     pg.display.set_caption(app_name)
 
     path = Path(filepath)
-    image = pg.image.load(path) if path.exists() and path.is_file() else pg.Surface(img_size)
+    if path.exists() and path.is_file():
+        image = pg.image.load(path)
+    else:
+        img_size = list(
+            map(int, resolution.split(","))
+            if resolution
+            else map(int, (input(f"Image {x}: ") for x in ("width", "height")))
+        )
+        image = pg.Surface(img_size)
 
     cursor_rect = None
 
@@ -84,54 +85,63 @@ def main(filepath, resolution):
 
     clock = pg.time.Clock()
 
+    zoom_percent = 100
+    zoom_step = 100
+    zoom_changed = False
+
     while True:
         screen.fill(black)
 
         # Draws header text
-        header_text = f"{app_name}: {path.name} ({image.get_width()}x{image.get_height()})"
+        header_text = f"{app_name}: {path.name} ({image.get_width()}x{image.get_height()}) {zoom_percent}%"
         text_surface = new_text_surface(header_text, color=red)
         text_rect = rect_screen_center(text_surface.get_rect().move(0, 10), center_x=True)
         blit_text(text_surface, text_rect)
 
         # Draws the selected image
-        resized_img = resize_surface_by_percentage(image, 30)
+        resized_img = resize_surface_by_percentage(image, zoom_percent)
         img_screen_pos = rect_screen_center(resized_img.get_rect(), center_x=True, center_y=True)
         screen.blit(resized_img, img_screen_pos)
 
         # Draws the rectangle around the image
-        x, y = img_screen_pos[0] - line_width, img_screen_pos[1] - line_width
-        w, h = resized_img.get_rect().w + line_width, resized_img.get_rect().h + line_width
-        rectangle_rect = pg.Rect((x, y), (w, h))
+        rectangle_x, rectangle_y = img_screen_pos[0] - line_width, img_screen_pos[1] - line_width
+        rectangle_w, rectangle_h = resized_img.get_rect().w + line_width, resized_img.get_rect().h + line_width
+        rectangle_rect = pg.Rect((rectangle_x, rectangle_y), (rectangle_w, rectangle_h))
         pg.draw.rect(screen, white, rectangle_rect, width=line_width)
 
         # Initializes cursor_rect value
-        if not cursor_rect:
-            x, y = img_screen_pos[0] - cursor_line_width - 2, img_screen_pos[1] - cursor_line_width - 2
-            w, h = resized_img.get_width() // image.get_width(), resized_img.get_height() // image.get_height()
-            cursor_rect = pg.Rect((x, y), (w, h))
+        if cursor_rect is None or zoom_changed:
+            zoom_changed = False
+            cursor_x, cursor_y = img_screen_pos[0], img_screen_pos[1]
+            cursor_w, cursor_h = resized_img.get_width() // image.get_width(), resized_img.get_height() // image.get_height()
+            cursor_rect = pg.Rect((cursor_x, cursor_y), (cursor_w, cursor_h))
 
         # Draws the rectangle that corresponds to the cursor
         pg.draw.rect(screen, white, cursor_rect, width=cursor_line_width)
 
         # Handles user events
+        if pg.key.get_pressed()[pg.K_KP_PLUS]:
+            zoom_changed = True
+            zoom_percent += zoom_step
+        elif pg.key.get_pressed()[pg.K_KP_MINUS]:
+            zoom_changed = True
+            zoom_percent -= zoom_step
+
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 sys.exit()
 
             elif event.type == pg.KEYDOWN:
-                x_mov = resized_img.get_width() // (image.get_width())
-                y_mov = resized_img.get_height() // (image.get_height())
-
                 if event.key == pg.K_UP:
-                    cursor_rect.move_ip(0, -x_mov)
+                    cursor_rect.move_ip(0, -cursor_rect.w)
                 elif event.key == pg.K_DOWN:
-                    cursor_rect.move_ip(0, x_mov)
+                    cursor_rect.move_ip(0, cursor_rect.w)
                 elif event.key == pg.K_RIGHT:
-                    cursor_rect.move_ip(y_mov, 0)
+                    cursor_rect.move_ip(cursor_rect.h, 0)
                 elif event.key == pg.K_LEFT:
-                    cursor_rect.move_ip(-y_mov, 0)
+                    cursor_rect.move_ip(-cursor_rect.h, 0)
 
-                print(f"(x={cursor_rect.x}, y={cursor_rect.y})")
+            # print(f"(x={cursor_rect.x}, y={cursor_rect.y})")
 
         pg.display.flip()
 
