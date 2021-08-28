@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from typing import Tuple, Union
+from typing import Tuple, Union, Callable, Iterable
 
 import click
 import pygame as pg
@@ -47,6 +47,33 @@ def draw_welcome_msg(func):
     return wrapper
 
 
+class KeyBinding:
+    def __init__(self, keycode: int, description: str, func: Callable, on_pressed=False):
+        self.keycode = keycode
+        self.description = description
+        self.func = func
+        self.on_pressed = on_pressed
+
+    def __str__(self):
+        return f"(keycode={pg.key.name(self.keycode)}, description={self.description})"
+
+
+def handle_input(keybindings: Iterable[KeyBinding]):
+    on_pressed_bindings = set(filter(lambda k: k.on_pressed, keybindings))
+    for binding in on_pressed_bindings:
+        if pg.key.get_pressed()[binding.keycode]:
+            binding.func()
+
+    not_on_pressed_keybindings = set(keybindings).difference(on_pressed_bindings)
+    for event in pg.event.get():
+        if event.type == pg.QUIT:
+            sys.exit()
+
+        for binding in not_on_pressed_keybindings:
+            if event.type == pg.KEYDOWN and event.key == binding.keycode:
+                binding.func()
+
+
 @draw_welcome_msg
 @click.command(name="cmdpxl")
 @click.option(
@@ -78,28 +105,43 @@ def main(filepath, resolution):
         )
         image = pg.Surface(img_size)
 
-    cursor_rect = None
+    cursor_rect = pg.Rect((0, 0), (0, 0))
 
     line_width = 6
     cursor_line_width = line_width // 4
 
     clock = pg.time.Clock()
 
-    zoom_percent = 100
-    zoom_step = 100
-    zoom_changed = False
+    zoom = {
+        "percent": 100,
+        "step": 100,
+        "changed": False,
+    }
+
+    def change_zoom(is_positive: bool):
+        zoom["changed"] = True
+        zoom["percent"] += zoom["step"] if is_positive else -zoom["step"]
+
+    keybindings = (
+        KeyBinding(pg.K_KP_PLUS, "Zoom in", lambda: change_zoom(True), on_pressed=True),
+        KeyBinding(pg.K_KP_MINUS, "Zoom out", lambda: change_zoom(False), on_pressed=True),
+        KeyBinding(pg.K_UP, "Move cursor up", lambda: cursor_rect.move_ip(0, -cursor_rect.w)),
+        KeyBinding(pg.K_DOWN, "Move cursor down", lambda: cursor_rect.move_ip(0, cursor_rect.w)),
+        KeyBinding(pg.K_RIGHT, "Move cursor right", lambda: cursor_rect.move_ip(cursor_rect.h, 0)),
+        KeyBinding(pg.K_LEFT, "Move cursor left", lambda: cursor_rect.move_ip(-cursor_rect.h, 0)),
+    )
 
     while True:
         screen.fill(black)
 
         # Draws header text
-        header_text = f"{app_name}: {path.name} ({image.get_width()}x{image.get_height()}) {zoom_percent}%"
+        header_text = f"{app_name}: {path.name} ({image.get_width()}x{image.get_height()}) {zoom['percent']}%"
         text_surface = new_text_surface(header_text, color=red)
         text_rect = rect_screen_center(text_surface.get_rect().move(0, 10), center_x=True)
         blit_text(text_surface, text_rect)
 
         # Draws the selected image
-        resized_img = resize_surface_by_percentage(image, zoom_percent)
+        resized_img = resize_surface_by_percentage(image, zoom["percent"])
         img_screen_pos = rect_screen_center(resized_img.get_rect(), center_x=True, center_y=True)
         screen.blit(resized_img, img_screen_pos)
 
@@ -110,38 +152,15 @@ def main(filepath, resolution):
         pg.draw.rect(screen, white, rectangle_rect, width=line_width)
 
         # Initializes cursor_rect value
-        if cursor_rect is None or zoom_changed:
-            zoom_changed = False
-            cursor_x, cursor_y = img_screen_pos[0], img_screen_pos[1]
-            cursor_w, cursor_h = resized_img.get_width() // image.get_width(), resized_img.get_height() // image.get_height()
-            cursor_rect = pg.Rect((cursor_x, cursor_y), (cursor_w, cursor_h))
+        if cursor_rect is None or zoom["changed"]:
+            zoom["changed"] = False
+            cursor_rect.x, cursor_rect.y = img_screen_pos[0], img_screen_pos[1]
+            cursor_rect.w, cursor_rect.h = resized_img.get_width() // image.get_width(), resized_img.get_height() // image.get_height()
 
         # Draws the rectangle that corresponds to the cursor
         pg.draw.rect(screen, white, cursor_rect, width=cursor_line_width)
 
-        # Handles user events
-        if pg.key.get_pressed()[pg.K_KP_PLUS]:
-            zoom_changed = True
-            zoom_percent += zoom_step
-        elif pg.key.get_pressed()[pg.K_KP_MINUS]:
-            zoom_changed = True
-            zoom_percent -= zoom_step
-
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                sys.exit()
-
-            elif event.type == pg.KEYDOWN:
-                if event.key == pg.K_UP:
-                    cursor_rect.move_ip(0, -cursor_rect.w)
-                elif event.key == pg.K_DOWN:
-                    cursor_rect.move_ip(0, cursor_rect.w)
-                elif event.key == pg.K_RIGHT:
-                    cursor_rect.move_ip(cursor_rect.h, 0)
-                elif event.key == pg.K_LEFT:
-                    cursor_rect.move_ip(-cursor_rect.h, 0)
-
-            # print(f"(x={cursor_rect.x}, y={cursor_rect.y})")
+        handle_input(keybindings)
 
         pg.display.flip()
 
