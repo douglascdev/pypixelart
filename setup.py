@@ -12,8 +12,8 @@ with open("requirements.txt") as requirements_file:
 
 
 setup(
-    author="Jieruei Chang",
-    author_email="jierueic@gmail.com",
+    author="Douglas C.",
+    author_email="douglasc.dev@gmail.com",
     python_requires=">=3.6",
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
@@ -29,7 +29,7 @@ setup(
     description="A totally practical command-line image editor",
     entry_points={
         "console_scripts": [
-            "cmdpxl=cmdpxl.main:main",
+            "pypixelart=pypixelart.main:main",
         ],
     },
     install_requires=requirements,
@@ -37,10 +37,10 @@ setup(
     long_description=readme,
     long_description_content_type="text/markdown",
     include_package_data=True,
-    keywords=["cmdpxl", "opencv", "image-editor", "terminal-based"],
-    name="cmdpxl",
-    packages=find_packages(include=["cmdpxl", "cmdpxl.*"]),
-    url="https://github.com/knosmos/cmdpxl",
+    keywords=["pypixelart", "pygame", "image-editor", "pixel-art"],
+    name="pypixelart",
+    packages=find_packages(include=["pypixelart", "pypixelart.*"]),
+    url="https://github.com/douglascdev/pypixelart",
     version="0.1.8",
     zip_safe=False,
 )
