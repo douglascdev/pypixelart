@@ -7,7 +7,7 @@ import click
 import pygame as pg
 import pygame.font
 
-black, white, red = pg.Color(20, 20, 20), pg.Color(255, 255, 255), pg.Color(150, 0, 0)
+black, white, grey, red = pg.Color(20, 20, 20), pg.Color(255, 255, 255), pg.Color(50, 50, 50), pg.Color(150, 0, 0)
 
 
 def resize_surface_by_percentage(surface: pg.Surface, percentage: int) -> pg.Surface:
@@ -115,7 +115,8 @@ def main(filepath, resolution):
     cursor_rect = pg.Rect((0, 0), (0, 0))
 
     line_width = 4
-    cursor_line_width = line_width // 4
+    cursor_line_width = line_width // 2
+    grid_line_width = 1
 
     clock = pg.time.Clock()
 
@@ -123,6 +124,10 @@ def main(filepath, resolution):
         "percent": 1000,
         "step": 100,
         "changed": False,
+    }
+
+    grid = {
+        "on": False,
     }
 
     def change_zoom(is_positive: bool):
@@ -134,6 +139,9 @@ def main(filepath, resolution):
     def move_cursor(x: int, y: int):
         cursor_rect.move_ip(x * cursor_rect.w, y * cursor_rect.h)
 
+    def set_grid():
+        grid["on"] = not grid["on"]
+
     zoom_g, cursor_g = "Zoom", "Move Cursor"
     keybindings = (
         KeyBinding(pg.K_KP_PLUS, zoom_g, lambda: change_zoom(True), on_pressed=True),
@@ -142,12 +150,13 @@ def main(filepath, resolution):
         KeyBinding(pg.K_DOWN, cursor_g, lambda: move_cursor(0, 1)),
         KeyBinding(pg.K_RIGHT, cursor_g, lambda: move_cursor(1, 0)),
         KeyBinding(pg.K_LEFT, cursor_g, lambda: move_cursor(-1, 0)),
+        KeyBinding(pg.K_g, "Grid", lambda: set_grid()),
     )
 
     img_screen_pos = None
 
     while True:
-        screen.fill(black)
+        screen.fill(grey)
 
         # Draws header text
         header_text = f"{app_name}: {path.name} ({image.get_width()}x{image.get_height()}) {zoom['percent']}%"
@@ -198,8 +207,15 @@ def main(filepath, resolution):
             cursor_rect.x = cursor_rect.x * cursor_rect.w + img_screen_pos[0]
             cursor_rect.y = cursor_rect.y * cursor_rect.h + img_screen_pos[1]
 
+        # Draws a grid of rectangles around each pixel
+        if grid["on"]:
+            for i in range(img_screen_pos[0], img_screen_pos[0] + resized_img.get_width(), cursor_rect.w):
+                for j in range(img_screen_pos[1], img_screen_pos[1] + resized_img.get_height(), cursor_rect.h):
+                    pg.draw.rect(screen, white, pg.Rect((i, j), (cursor_rect.w, cursor_rect.h)), width=grid_line_width)
+
         # Draws the rectangle that corresponds to the cursor
-        pg.draw.rect(screen, white, cursor_rect, width=cursor_line_width)
+        cursor_color = black if grid["on"] else white
+        pg.draw.rect(screen, cursor_color, cursor_rect, width=cursor_line_width)
 
         # Draws keybindings on screen
         position = rectangle_rect.move(0, (rectangle_h + 30))
