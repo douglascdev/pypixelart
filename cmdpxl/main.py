@@ -1,5 +1,6 @@
 import itertools
 import sys
+from enum import Enum, auto, IntEnum
 from pathlib import Path
 from typing import Tuple, Union, Callable, Iterable
 
@@ -7,7 +8,12 @@ import click
 import pygame as pg
 import pygame.font
 
-black, white, grey, red = pg.Color(20, 20, 20), pg.Color(255, 255, 255), pg.Color(50, 50, 50), pg.Color(150, 0, 0)
+black, white, grey, red = (
+    pg.Color(20, 20, 20),
+    pg.Color(255, 255, 255),
+    pg.Color(50, 50, 50),
+    pg.Color(150, 0, 0),
+)
 
 
 def resize_surface_by_percentage(surface: pg.Surface, percentage: int) -> pg.Surface:
@@ -117,6 +123,7 @@ def main(filepath, resolution):
     line_width = 4
     cursor_line_width = line_width // 2
     grid_line_width = 1
+    symmetry_line_width = 4
 
     clock = pg.time.Clock()
 
@@ -130,6 +137,13 @@ def main(filepath, resolution):
         "on": False,
     }
 
+    class SymmetryType(IntEnum):
+        NoSymmetry = (0,)
+        Horizontal = (1,)
+        Vertical = (2,)
+
+    symmetry = {"status": SymmetryType.NoSymmetry}
+
     def change_zoom(is_positive: bool):
         to_add = zoom["step"] if is_positive else -zoom["step"]
         if zoom["percent"] + to_add > 0:
@@ -142,6 +156,11 @@ def main(filepath, resolution):
     def set_grid():
         grid["on"] = not grid["on"]
 
+    def set_symmetry():
+        symmetry["status"] = SymmetryType(
+            (symmetry["status"].value + 1) % len(list(SymmetryType))
+        )
+
     zoom_g, cursor_g = "Zoom", "Move Cursor"
     keybindings = (
         KeyBinding(pg.K_KP_PLUS, zoom_g, lambda: change_zoom(True), on_pressed=True),
@@ -151,6 +170,7 @@ def main(filepath, resolution):
         KeyBinding(pg.K_RIGHT, cursor_g, lambda: move_cursor(1, 0)),
         KeyBinding(pg.K_LEFT, cursor_g, lambda: move_cursor(-1, 0)),
         KeyBinding(pg.K_g, "Grid", lambda: set_grid()),
+        KeyBinding(pg.K_s, "Symmetry", lambda: set_symmetry()),
     )
 
     img_screen_pos = None
@@ -209,9 +229,57 @@ def main(filepath, resolution):
 
         # Draws a grid of rectangles around each pixel
         if grid["on"]:
-            for i in range(img_screen_pos[0], img_screen_pos[0] + resized_img.get_width(), cursor_rect.w):
-                for j in range(img_screen_pos[1], img_screen_pos[1] + resized_img.get_height(), cursor_rect.h):
-                    pg.draw.rect(screen, white, pg.Rect((i, j), (cursor_rect.w, cursor_rect.h)), width=grid_line_width)
+            for i in range(
+                img_screen_pos[0],
+                img_screen_pos[0] + resized_img.get_width(),
+                cursor_rect.w,
+            ):
+                for j in range(
+                    img_screen_pos[1],
+                    img_screen_pos[1] + resized_img.get_height(),
+                    cursor_rect.h,
+                ):
+                    pg.draw.rect(
+                        screen,
+                        white,
+                        pg.Rect((i, j), (cursor_rect.w, cursor_rect.h)),
+                        width=grid_line_width,
+                    )
+
+        # Draws a line indicating where symmetry starts
+        if symmetry["status"] != SymmetryType.NoSymmetry:
+            if symmetry["status"] == SymmetryType.Vertical:
+                symmetry_line_start = (
+                    resized_img.get_rect().midtop[0] + img_screen_pos[0],
+                    resized_img.get_rect().midtop[1] + img_screen_pos[1],
+                )
+                symmetry_line_end = (
+                    resized_img.get_rect().midbottom[0] + img_screen_pos[0],
+                    resized_img.get_rect().midbottom[1] + img_screen_pos[1],
+                )
+                pg.draw.line(
+                    screen,
+                    black,
+                    symmetry_line_start,
+                    symmetry_line_end,
+                    width=symmetry_line_width,
+                )
+            elif symmetry["status"] == SymmetryType.Horizontal:
+                symmetry_line_start = (
+                    resized_img.get_rect().midleft[0] + img_screen_pos[0],
+                    resized_img.get_rect().midleft[1] + img_screen_pos[1],
+                )
+                symmetry_line_end = (
+                    resized_img.get_rect().midright[0] + img_screen_pos[0],
+                    resized_img.get_rect().midright[1] + img_screen_pos[1],
+                )
+                pg.draw.line(
+                    screen,
+                    black,
+                    symmetry_line_start,
+                    symmetry_line_end,
+                    width=symmetry_line_width,
+                )
 
         # Draws the rectangle that corresponds to the cursor
         cursor_color = black if grid["on"] else white
