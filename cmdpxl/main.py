@@ -1,3 +1,4 @@
+import itertools
 import sys
 from pathlib import Path
 from typing import Tuple, Union, Callable, Iterable
@@ -55,15 +56,15 @@ def draw_welcome_msg(func):
 
 class KeyBinding:
     def __init__(
-        self, keycode: int, description: str, func: Callable, on_pressed=False
+        self, keycode: int, group: str, func: Callable, on_pressed=False
     ):
         self.keycode = keycode
-        self.description = description
+        self.group = group
         self.func = func
         self.on_pressed = on_pressed
 
     def __str__(self):
-        return f"(keycode={pg.key.name(self.keycode)}, description={self.description})"
+        return f"(keycode={pg.key.name(self.keycode)}, group={self.group})"
 
 
 def handle_input(keybindings: Iterable[KeyBinding]):
@@ -133,24 +134,24 @@ def main(filepath, resolution):
             zoom["percent"] += to_add
 
     keybindings = (
-        KeyBinding(pg.K_KP_PLUS, "Zoom in", lambda: change_zoom(True), on_pressed=True),
+        KeyBinding(pg.K_KP_PLUS, "Zoom", lambda: change_zoom(True), on_pressed=True),
         KeyBinding(
-            pg.K_KP_MINUS, "Zoom out", lambda: change_zoom(False), on_pressed=True
+            pg.K_KP_MINUS, "Zoom", lambda: change_zoom(False), on_pressed=True
         ),
         KeyBinding(
-            pg.K_UP, "Move cursor up", lambda: cursor_rect.move_ip(0, -cursor_rect.w)
+            pg.K_UP, "Move cursor", lambda: cursor_rect.move_ip(0, -cursor_rect.w)
         ),
         KeyBinding(
-            pg.K_DOWN, "Move cursor down", lambda: cursor_rect.move_ip(0, cursor_rect.w)
+            pg.K_DOWN, "Move cursor", lambda: cursor_rect.move_ip(0, cursor_rect.w)
         ),
         KeyBinding(
             pg.K_RIGHT,
-            "Move cursor right",
+            "Move cursor",
             lambda: cursor_rect.move_ip(cursor_rect.h, 0),
         ),
         KeyBinding(
             pg.K_LEFT,
-            "Move cursor left",
+            "Move cursor",
             lambda: cursor_rect.move_ip(-cursor_rect.h, 0),
         ),
     )
@@ -214,8 +215,9 @@ def main(filepath, resolution):
 
         # Draws keybindings on screen
         position = rectangle_rect.move(0, (rectangle_h + 30))
-        for binding in keybindings:
-            text = f"[{pg.key.name(binding.keycode)}]: {binding.description}"
+        grouped_bindings = itertools.groupby(keybindings, lambda b: b.group)
+        for group, bindings in grouped_bindings:
+            text = f"{group}: {', '.join([pg.key.name(binding.keycode) for binding in bindings])}"
             text_surface = new_text_surface(text, color=white)
             text_rect = rect_screen_center(position, center_x=True)
             position.move_ip(0, text_surface.get_height() + 10)
