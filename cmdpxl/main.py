@@ -120,7 +120,7 @@ def main(filepath, resolution):
     clock = pg.time.Clock()
 
     zoom = {
-        "percent": 100,
+        "percent": 1000,
         "step": 100,
         "changed": False,
     }
