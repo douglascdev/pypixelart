@@ -1,5 +1,4 @@
 import sys
-import time
 from pathlib import Path
 from typing import Tuple, Union, Callable, Iterable
 
@@ -156,6 +155,8 @@ def main(filepath, resolution):
         ),
     )
 
+    img_screen_pos = None
+
     while True:
         screen.fill(black)
 
@@ -169,6 +170,7 @@ def main(filepath, resolution):
 
         # Draws the selected image
         resized_img = resize_surface_by_percentage(image, zoom["percent"])
+        last_img_screen_pos = img_screen_pos
         img_screen_pos = rect_screen_center(
             resized_img.get_rect(), center_x=True, center_y=True
         )
@@ -186,17 +188,26 @@ def main(filepath, resolution):
         rectangle_rect = pg.Rect((rectangle_x, rectangle_y), (rectangle_w, rectangle_h))
         pg.draw.rect(screen, white, rectangle_rect, width=line_width)
 
-        # Initializes cursor_rect value
-        # TODO:
-        #  - initialize position when resizing the window
-        #  - keep the position the cursor was at
-        if cursor_rect is None or zoom["changed"]:
-            zoom["changed"] = False
+        # Initializes cursor values
+        window_resized = last_img_screen_pos and last_img_screen_pos != img_screen_pos
+        if (cursor_rect.x, cursor_rect.y) == (0, 0):
             cursor_rect.x, cursor_rect.y = img_screen_pos[0], img_screen_pos[1]
             cursor_rect.w, cursor_rect.h = (
                 resized_img.get_width() // image.get_width(),
                 resized_img.get_height() // image.get_height(),
             )
+        elif zoom["changed"] or window_resized:
+            zoom["changed"] = False
+            if all((cursor_rect, last_img_screen_pos)):
+                coord_x = (cursor_rect.x - last_img_screen_pos[0]) // cursor_rect.w
+                coord_y = (cursor_rect.y - last_img_screen_pos[1]) // cursor_rect.h
+                cursor_rect.x, cursor_rect.y = coord_x, coord_y
+            cursor_rect.w, cursor_rect.h = (
+                resized_img.get_width() // image.get_width(),
+                resized_img.get_height() // image.get_height(),
+            )
+            cursor_rect.x = cursor_rect.x * cursor_rect.w + img_screen_pos[0]
+            cursor_rect.y = cursor_rect.y * cursor_rect.h + img_screen_pos[1]
 
         # Draws the rectangle that corresponds to the cursor
         pg.draw.rect(screen, white, cursor_rect, width=cursor_line_width)
