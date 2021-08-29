@@ -187,6 +187,9 @@ def main(filepath, resolution):
         pg.draw.rect(screen, white, rectangle_rect, width=line_width)
 
         # Initializes cursor_rect value
+        # TODO:
+        #  - initialize position when resizing the window
+        #  - keep the position the cursor was at
         if cursor_rect is None or zoom["changed"]:
             zoom["changed"] = False
             cursor_rect.x, cursor_rect.y = img_screen_pos[0], img_screen_pos[1]
