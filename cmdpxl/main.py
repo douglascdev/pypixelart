@@ -55,9 +55,7 @@ def draw_welcome_msg(func):
 
 
 class KeyBinding:
-    def __init__(
-        self, keycode: int, group: str, func: Callable, on_pressed=False
-    ):
+    def __init__(self, keycode: int, group: str, func: Callable, on_pressed=False):
         self.keycode = keycode
         self.group = group
         self.func = func
@@ -133,27 +131,17 @@ def main(filepath, resolution):
             zoom["changed"] = True
             zoom["percent"] += to_add
 
+    def move_cursor(x: int, y: int):
+        cursor_rect.move_ip(x * cursor_rect.w, y * cursor_rect.h)
+
+    zoom_g, cursor_g = "Zoom", "Move Cursor"
     keybindings = (
-        KeyBinding(pg.K_KP_PLUS, "Zoom", lambda: change_zoom(True), on_pressed=True),
-        KeyBinding(
-            pg.K_KP_MINUS, "Zoom", lambda: change_zoom(False), on_pressed=True
-        ),
-        KeyBinding(
-            pg.K_UP, "Move cursor", lambda: cursor_rect.move_ip(0, -cursor_rect.w)
-        ),
-        KeyBinding(
-            pg.K_DOWN, "Move cursor", lambda: cursor_rect.move_ip(0, cursor_rect.w)
-        ),
-        KeyBinding(
-            pg.K_RIGHT,
-            "Move cursor",
-            lambda: cursor_rect.move_ip(cursor_rect.h, 0),
-        ),
-        KeyBinding(
-            pg.K_LEFT,
-            "Move cursor",
-            lambda: cursor_rect.move_ip(-cursor_rect.h, 0),
-        ),
+        KeyBinding(pg.K_KP_PLUS, zoom_g, lambda: change_zoom(True), on_pressed=True),
+        KeyBinding(pg.K_KP_MINUS, zoom_g, lambda: change_zoom(False), on_pressed=True),
+        KeyBinding(pg.K_UP, cursor_g, lambda: move_cursor(0, -1)),
+        KeyBinding(pg.K_DOWN, cursor_g, lambda: move_cursor(0, 1)),
+        KeyBinding(pg.K_RIGHT, cursor_g, lambda: move_cursor(1, 0)),
+        KeyBinding(pg.K_LEFT, cursor_g, lambda: move_cursor(-1, 0)),
     )
 
     img_screen_pos = None
