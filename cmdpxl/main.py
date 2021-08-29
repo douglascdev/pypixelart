@@ -10,12 +10,16 @@ black, white, red = pg.Color(20, 20, 20), pg.Color(255, 255, 255), pg.Color(150,
 
 
 def resize_surface_by_percentage(surface: pg.Surface, percentage: int) -> pg.Surface:
-    new_image_resolution = [xy * percentage // 100 for xy in (surface.get_width(), surface.get_height())]
+    new_image_resolution = [
+        xy * percentage // 100 for xy in (surface.get_width(), surface.get_height())
+    ]
     return pg.transform.scale(surface, new_image_resolution)
 
 
 def new_text_surface(text: str, size: int = 12, color: pg.color.Color = black):
-    default_font = (Path(__file__).parent / ".." / "assets" / "fonts" / "PressStart2P-Regular.ttf").resolve()
+    default_font = (
+        Path(__file__).parent / ".." / "assets" / "fonts" / "PressStart2P-Regular.ttf"
+    ).resolve()
     font = pygame.font.Font(default_font, size)
     return font.render(text, False, color, None)
 
@@ -25,7 +29,9 @@ def blit_text(draw: Union[str, pg.Surface], coord: Tuple[int, int]):
     pg.display.get_surface().blit(surface, coord)
 
 
-def rect_screen_center(rect: pg.Rect, center_x=False, center_y=False) -> Tuple[int, int]:
+def rect_screen_center(
+    rect: pg.Rect, center_x=False, center_y=False
+) -> Tuple[int, int]:
     screen = pygame.display.get_surface()
     rect = rect.copy()
 
@@ -41,14 +47,16 @@ def rect_screen_center(rect: pg.Rect, center_x=False, center_y=False) -> Tuple[i
 def draw_welcome_msg(func):
     def wrapper():
         click.clear()
-        click.echo(click.style("CMDPXL - A TOTALLY PRACTICAL IMAGE EDITOR", fg='red'))
+        click.echo(click.style("CMDPXL - A TOTALLY PRACTICAL IMAGE EDITOR", fg="red"))
         func()
 
     return wrapper
 
 
 class KeyBinding:
-    def __init__(self, keycode: int, description: str, func: Callable, on_pressed=False):
+    def __init__(
+        self, keycode: int, description: str, func: Callable, on_pressed=False
+    ):
         self.keycode = keycode
         self.description = description
         self.func = func
@@ -124,11 +132,25 @@ def main(filepath, resolution):
 
     keybindings = (
         KeyBinding(pg.K_KP_PLUS, "Zoom in", lambda: change_zoom(True), on_pressed=True),
-        KeyBinding(pg.K_KP_MINUS, "Zoom out", lambda: change_zoom(False), on_pressed=True),
-        KeyBinding(pg.K_UP, "Move cursor up", lambda: cursor_rect.move_ip(0, -cursor_rect.w)),
-        KeyBinding(pg.K_DOWN, "Move cursor down", lambda: cursor_rect.move_ip(0, cursor_rect.w)),
-        KeyBinding(pg.K_RIGHT, "Move cursor right", lambda: cursor_rect.move_ip(cursor_rect.h, 0)),
-        KeyBinding(pg.K_LEFT, "Move cursor left", lambda: cursor_rect.move_ip(-cursor_rect.h, 0)),
+        KeyBinding(
+            pg.K_KP_MINUS, "Zoom out", lambda: change_zoom(False), on_pressed=True
+        ),
+        KeyBinding(
+            pg.K_UP, "Move cursor up", lambda: cursor_rect.move_ip(0, -cursor_rect.w)
+        ),
+        KeyBinding(
+            pg.K_DOWN, "Move cursor down", lambda: cursor_rect.move_ip(0, cursor_rect.w)
+        ),
+        KeyBinding(
+            pg.K_RIGHT,
+            "Move cursor right",
+            lambda: cursor_rect.move_ip(cursor_rect.h, 0),
+        ),
+        KeyBinding(
+            pg.K_LEFT,
+            "Move cursor left",
+            lambda: cursor_rect.move_ip(-cursor_rect.h, 0),
+        ),
     )
 
     while True:
@@ -137,17 +159,27 @@ def main(filepath, resolution):
         # Draws header text
         header_text = f"{app_name}: {path.name} ({image.get_width()}x{image.get_height()}) {zoom['percent']}%"
         text_surface = new_text_surface(header_text, color=red)
-        text_rect = rect_screen_center(text_surface.get_rect().move(0, 10), center_x=True)
+        text_rect = rect_screen_center(
+            text_surface.get_rect().move(0, 10), center_x=True
+        )
         blit_text(text_surface, text_rect)
 
         # Draws the selected image
         resized_img = resize_surface_by_percentage(image, zoom["percent"])
-        img_screen_pos = rect_screen_center(resized_img.get_rect(), center_x=True, center_y=True)
+        img_screen_pos = rect_screen_center(
+            resized_img.get_rect(), center_x=True, center_y=True
+        )
         screen.blit(resized_img, img_screen_pos)
 
         # Draws the rectangle around the image
-        rectangle_x, rectangle_y = img_screen_pos[0] - line_width, img_screen_pos[1] - line_width
-        rectangle_w, rectangle_h = resized_img.get_rect().w + line_width, resized_img.get_rect().h + line_width
+        rectangle_x, rectangle_y = (
+            img_screen_pos[0] - line_width,
+            img_screen_pos[1] - line_width,
+        )
+        rectangle_w, rectangle_h = (
+            resized_img.get_rect().w + line_width,
+            resized_img.get_rect().h + line_width,
+        )
         rectangle_rect = pg.Rect((rectangle_x, rectangle_y), (rectangle_w, rectangle_h))
         pg.draw.rect(screen, white, rectangle_rect, width=line_width)
 
@@ -155,7 +187,10 @@ def main(filepath, resolution):
         if cursor_rect is None or zoom["changed"]:
             zoom["changed"] = False
             cursor_rect.x, cursor_rect.y = img_screen_pos[0], img_screen_pos[1]
-            cursor_rect.w, cursor_rect.h = resized_img.get_width() // image.get_width(), resized_img.get_height() // image.get_height()
+            cursor_rect.w, cursor_rect.h = (
+                resized_img.get_width() // image.get_width(),
+                resized_img.get_height() // image.get_height(),
+            )
 
         # Draws the rectangle that corresponds to the cursor
         pg.draw.rect(screen, white, cursor_rect, width=cursor_line_width)
