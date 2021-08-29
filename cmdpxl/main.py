@@ -163,8 +163,8 @@ def main(filepath, resolution):
 
     zoom_g, cursor_g = "Zoom", "Move Cursor"
     keybindings = (
-        KeyBinding(pg.K_KP_PLUS, zoom_g, lambda: change_zoom(True), on_pressed=True),
-        KeyBinding(pg.K_KP_MINUS, zoom_g, lambda: change_zoom(False), on_pressed=True),
+        KeyBinding(pg.K_y, zoom_g, lambda: change_zoom(True), on_pressed=True),
+        KeyBinding(pg.K_u, zoom_g, lambda: change_zoom(False), on_pressed=True),
         KeyBinding(pg.K_k, cursor_g, lambda: move_cursor(0, -1)),
         KeyBinding(pg.K_j, cursor_g, lambda: move_cursor(0, 1)),
         KeyBinding(pg.K_l, cursor_g, lambda: move_cursor(1, 0)),
