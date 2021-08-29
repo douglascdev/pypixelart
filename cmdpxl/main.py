@@ -1,4 +1,5 @@
 import sys
+import time
 from pathlib import Path
 from typing import Tuple, Union, Callable, Iterable
 
@@ -127,8 +128,10 @@ def main(filepath, resolution):
     }
 
     def change_zoom(is_positive: bool):
-        zoom["changed"] = True
-        zoom["percent"] += zoom["step"] if is_positive else -zoom["step"]
+        to_add = zoom["step"] if is_positive else -zoom["step"]
+        if zoom["percent"] + to_add > 0:
+            zoom["changed"] = True
+            zoom["percent"] += to_add
 
     keybindings = (
         KeyBinding(pg.K_KP_PLUS, "Zoom in", lambda: change_zoom(True), on_pressed=True),
