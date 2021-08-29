@@ -2,7 +2,7 @@ import itertools
 import sys
 from enum import Enum, auto, IntEnum
 from pathlib import Path
-from typing import Tuple, Union, Callable, Iterable
+from typing import Tuple, Union, Callable, Iterable, List
 
 import click
 import pygame as pg
@@ -31,7 +31,7 @@ def new_text_surface(text: str, size: int = 12, color: pg.color.Color = black):
     return font.render(text, False, color, None)
 
 
-def blit_text(draw: Union[str, pg.Surface], coord: Tuple[int, int]):
+def blit_text(draw: Union[str, pg.Surface], coord: Union[Iterable, Tuple[int, int], pg.Rect]):
     surface = draw if isinstance(draw, pg.Surface) else new_text_surface(str(draw))
     pg.display.get_surface().blit(surface, coord)
 
@@ -163,8 +163,8 @@ def main(filepath, resolution):
 
     zoom_g, cursor_g = "Zoom", "Move Cursor"
     keybindings = (
-        KeyBinding(pg.K_y, zoom_g, lambda: change_zoom(True), on_pressed=True),
-        KeyBinding(pg.K_u, zoom_g, lambda: change_zoom(False), on_pressed=True),
+        KeyBinding(pg.K_u, zoom_g, lambda: change_zoom(True), on_pressed=True),
+        KeyBinding(pg.K_y, zoom_g, lambda: change_zoom(False), on_pressed=True),
         KeyBinding(pg.K_k, cursor_g, lambda: move_cursor(0, -1)),
         KeyBinding(pg.K_j, cursor_g, lambda: move_cursor(0, 1)),
         KeyBinding(pg.K_l, cursor_g, lambda: move_cursor(1, 0)),
@@ -207,6 +207,13 @@ def main(filepath, resolution):
         pg.draw.rect(screen, white, rectangle_rect, width=line_width)
 
         # Initializes cursor values
+        def cursor_coords_in_pixels() -> Tuple[int, int]:
+            if not all((cursor_rect, last_img_screen_pos)):
+                return 0, 0
+            coord_x = (cursor_rect.x - last_img_screen_pos[0]) // cursor_rect.w
+            coord_y = (cursor_rect.y - last_img_screen_pos[1]) // cursor_rect.h
+            return coord_x, coord_y
+
         window_resized = last_img_screen_pos and last_img_screen_pos != img_screen_pos
         if (cursor_rect.x, cursor_rect.y) == (0, 0):
             cursor_rect.x, cursor_rect.y = img_screen_pos[0], img_screen_pos[1]
@@ -216,10 +223,7 @@ def main(filepath, resolution):
             )
         elif zoom["changed"] or window_resized:
             zoom["changed"] = False
-            if all((cursor_rect, last_img_screen_pos)):
-                coord_x = (cursor_rect.x - last_img_screen_pos[0]) // cursor_rect.w
-                coord_y = (cursor_rect.y - last_img_screen_pos[1]) // cursor_rect.h
-                cursor_rect.x, cursor_rect.y = coord_x, coord_y
+            cursor_rect.x, cursor_rect.y = cursor_coords_in_pixels()
             cursor_rect.w, cursor_rect.h = (
                 resized_img.get_width() // image.get_width(),
                 resized_img.get_height() // image.get_height(),
@@ -286,14 +290,23 @@ def main(filepath, resolution):
         pg.draw.rect(screen, cursor_color, cursor_rect, width=cursor_line_width)
 
         # Draws keybindings on screen
-        position = rectangle_rect.move(0, (rectangle_h + 30))
+        binding_text_position = rectangle_rect.move(0, (rectangle_h + 20))
         grouped_bindings = itertools.groupby(keybindings, lambda b: b.group)
         for group, bindings in grouped_bindings:
             text = f"{group}: {', '.join([pg.key.name(binding.keycode) for binding in bindings])}"
             text_surface = new_text_surface(text, color=white)
-            text_rect = rect_screen_center(position, center_x=True)
-            position.move_ip(0, text_surface.get_height() + 10)
+            text_rect = rect_screen_center(binding_text_position, center_x=True)
+            binding_text_position.move_ip(0, text_surface.get_height() + 10)
             blit_text(text_surface, text_rect)
+
+        # Draws cursor coordinates above the rectangle
+        cursor_coords_text_pos = list(rectangle_rect.midtop)
+        cursor_pixels_x, cursor_pixels_y = cursor_coords_in_pixels()
+        text = f"({cursor_pixels_x}, {cursor_pixels_y})"
+        text_surface = new_text_surface(text, color=white)
+        cursor_coords_text_pos[0] -= text_surface.get_width() // 2
+        cursor_coords_text_pos[1] -= 20
+        blit_text(text_surface, cursor_coords_text_pos)
 
         cursor_rect_backup = cursor_rect.x, cursor_rect.y
 
