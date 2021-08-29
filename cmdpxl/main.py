@@ -107,7 +107,7 @@ def main(filepath, resolution):
 
     cursor_rect = pg.Rect((0, 0), (0, 0))
 
-    line_width = 6
+    line_width = 4
     cursor_line_width = line_width // 4
 
     clock = pg.time.Clock()
@@ -160,7 +160,23 @@ def main(filepath, resolution):
         # Draws the rectangle that corresponds to the cursor
         pg.draw.rect(screen, white, cursor_rect, width=cursor_line_width)
 
+        # Draws keybindings on screen
+        position = rectangle_rect.move(0, (rectangle_h + 30))
+        for binding in keybindings:
+            text = f"[{pg.key.name(binding.keycode)}]: {binding.description}"
+            text_surface = new_text_surface(text, color=white)
+            text_rect = rect_screen_center(position, center_x=True)
+            position.move_ip(0, text_surface.get_height() + 10)
+            blit_text(text_surface, text_rect)
+
+        cursor_rect_backup = cursor_rect.x, cursor_rect.y
+
         handle_input(keybindings)
+
+        # Restore position from before input if the cursor is outside the rectangle
+        img_rect_pos = resized_img.get_rect().move(img_screen_pos)
+        if not img_rect_pos.colliderect(cursor_rect):
+            cursor_rect.x, cursor_rect.y = cursor_rect_backup
 
         pg.display.flip()
 
