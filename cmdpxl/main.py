@@ -165,10 +165,10 @@ def main(filepath, resolution):
     keybindings = (
         KeyBinding(pg.K_KP_PLUS, zoom_g, lambda: change_zoom(True), on_pressed=True),
         KeyBinding(pg.K_KP_MINUS, zoom_g, lambda: change_zoom(False), on_pressed=True),
-        KeyBinding(pg.K_UP, cursor_g, lambda: move_cursor(0, -1)),
-        KeyBinding(pg.K_DOWN, cursor_g, lambda: move_cursor(0, 1)),
-        KeyBinding(pg.K_RIGHT, cursor_g, lambda: move_cursor(1, 0)),
-        KeyBinding(pg.K_LEFT, cursor_g, lambda: move_cursor(-1, 0)),
+        KeyBinding(pg.K_k, cursor_g, lambda: move_cursor(0, -1)),
+        KeyBinding(pg.K_j, cursor_g, lambda: move_cursor(0, 1)),
+        KeyBinding(pg.K_l, cursor_g, lambda: move_cursor(1, 0)),
+        KeyBinding(pg.K_h, cursor_g, lambda: move_cursor(-1, 0)),
         KeyBinding(pg.K_g, "Grid", lambda: set_grid()),
         KeyBinding(pg.K_s, "Symmetry", lambda: set_symmetry()),
     )
