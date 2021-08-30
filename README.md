@@ -6,15 +6,15 @@ pypixelart has many exciting functionalities, including
 - Vim keybindings by default!
 - A grid!
 
-<img src="https://raw.githubusercontent.com/douglascdev/pypixelart/main/.github/images/grid.gif">
+![grid](https://user-images.githubusercontent.com/38195951/131271151-3093ee75-ef13-4c6c-9391-73519b19b572.gif)
 
 - Vertical and horizontal symmetry to draw the same pixel in two sides!
 
-<img src="https://raw.githubusercontent.com/douglascdev/pypixelart/main/.github/images/symmetry.gif">
+![zoom](https://user-images.githubusercontent.com/38195951/131271152-319d9213-5753-49b2-a5c5-241e39153c02.gif)
 
 - Zoom !
 
-<img src="https://raw.githubusercontent.com/douglascdev/pypixelart/main/.github/images/zoom.gif">
+![symmetry](https://user-images.githubusercontent.com/38195951/131271153-93a452fa-ca09-4a43-b62f-decb9c8d9899.gif)
 
 To do:
 - Saving images!
