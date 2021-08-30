@@ -31,7 +31,9 @@ def new_text_surface(text: str, size: int = 12, color: pg.color.Color = black):
     return font.render(text, False, color, None)
 
 
-def blit_text(draw: Union[str, pg.Surface], coord: Union[Iterable, Tuple[int, int], pg.Rect]):
+def blit_text(
+    draw: Union[str, pg.Surface], coord: Union[Iterable, Tuple[int, int], pg.Rect]
+):
     surface = draw if isinstance(draw, pg.Surface) else new_text_surface(str(draw))
     pg.display.get_surface().blit(surface, coord)
 
@@ -54,7 +56,9 @@ def rect_screen_center(
 def draw_welcome_msg(func):
     def wrapper():
         click.clear()
-        click.echo(click.style("pypixelart - A TOTALLY PRACTICAL IMAGE EDITOR", fg="red"))
+        click.echo(
+            click.style("pypixelart - A TOTALLY PRACTICAL IMAGE EDITOR", fg="red")
+        )
         func()
 
     return wrapper
@@ -120,6 +124,8 @@ def main(filepath, resolution):
 
     cursor_rect = pg.Rect((0, 0), (0, 0))
 
+    img_screen_pos, last_img_screen_pos = None, None
+
     line_width = 4
     cursor_line_width = line_width // 2
     grid_line_width = 1
@@ -136,6 +142,8 @@ def main(filepath, resolution):
     grid = {
         "on": False,
     }
+
+    image_history = list()
 
     class SymmetryType(IntEnum):
         NoSymmetry = (0,)
@@ -161,10 +169,47 @@ def main(filepath, resolution):
             (symmetry["status"].value + 1) % len(list(SymmetryType))
         )
 
+    def cursor_coords_in_pixels() -> Tuple[int, int]:
+        if not all((cursor_rect, last_img_screen_pos)):
+            return 0, 0
+        coord_x = (cursor_rect.x - last_img_screen_pos[0]) // cursor_rect.w
+        coord_y = (cursor_rect.y - last_img_screen_pos[1]) // cursor_rect.h
+        return coord_x, coord_y
+
+    def draw_pixel():
+        cursor_coords = list(cursor_coords_in_pixels())
+        image_history.append(image.copy())
+        image.set_at(cursor_coords, white)
+
+        if symmetry["status"] != SymmetryType.NoSymmetry:
+            middle_w, middle_h = image.get_width() // 2, image.get_height() // 2
+            if symmetry["status"] == SymmetryType.Vertical:
+
+                if cursor_coords[0] == middle_w:
+                    return
+
+                cursor_coords[0] = middle_w + (middle_w - cursor_coords[0]) - 1
+                image.set_at(cursor_coords, white)
+            elif symmetry["status"] == SymmetryType.Horizontal:
+
+                if cursor_coords[1] == middle_h:
+                    return
+
+                cursor_coords[1] = middle_h + (middle_h - cursor_coords[1]) - 1
+                image.set_at(cursor_coords, white)
+
+    def undo():
+        if image_history:
+            saved_img: pg.Surface = image_history.pop()
+            image.fill((0, 0, 0, 0))
+            image.blit(saved_img, (0, 0), saved_img.get_rect())
+
     zoom_g, cursor_g = "Zoom", "Move Cursor"
     keybindings = (
-        KeyBinding(pg.K_u, zoom_g, lambda: change_zoom(True), on_pressed=True),
-        KeyBinding(pg.K_y, zoom_g, lambda: change_zoom(False), on_pressed=True),
+        KeyBinding(pg.K_e, "Draw", lambda: draw_pixel(), on_pressed=True),
+        KeyBinding(pg.K_u, "Undo", lambda: undo(), on_pressed=True),
+        KeyBinding(pg.K_n, zoom_g, lambda: change_zoom(True), on_pressed=True),
+        KeyBinding(pg.K_n, zoom_g, lambda: change_zoom(False), on_pressed=True),
         KeyBinding(pg.K_k, cursor_g, lambda: move_cursor(0, -1)),
         KeyBinding(pg.K_j, cursor_g, lambda: move_cursor(0, 1)),
         KeyBinding(pg.K_l, cursor_g, lambda: move_cursor(1, 0)),
@@ -172,8 +217,6 @@ def main(filepath, resolution):
         KeyBinding(pg.K_g, "Grid", lambda: set_grid()),
         KeyBinding(pg.K_s, "Symmetry", lambda: set_symmetry()),
     )
-
-    img_screen_pos = None
 
     while True:
         screen.fill(grey)
@@ -207,13 +250,6 @@ def main(filepath, resolution):
         pg.draw.rect(screen, white, rectangle_rect, width=line_width)
 
         # Initializes cursor values
-        def cursor_coords_in_pixels() -> Tuple[int, int]:
-            if not all((cursor_rect, last_img_screen_pos)):
-                return 0, 0
-            coord_x = (cursor_rect.x - last_img_screen_pos[0]) // cursor_rect.w
-            coord_y = (cursor_rect.y - last_img_screen_pos[1]) // cursor_rect.h
-            return coord_x, coord_y
-
         window_resized = last_img_screen_pos and last_img_screen_pos != img_screen_pos
         if (cursor_rect.x, cursor_rect.y) == (0, 0):
             cursor_rect.x, cursor_rect.y = img_screen_pos[0], img_screen_pos[1]
