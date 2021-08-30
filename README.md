@@ -10,11 +10,11 @@ pypixelart has many exciting functionalities, including
 
 - Vertical and horizontal symmetry to draw the same pixel in two sides!
 
-![zoom](https://user-images.githubusercontent.com/38195951/131271152-319d9213-5753-49b2-a5c5-241e39153c02.gif)
+![symmetry](https://user-images.githubusercontent.com/38195951/131271153-93a452fa-ca09-4a43-b62f-decb9c8d9899.gif)
 
 - Zoom !
 
-![symmetry](https://user-images.githubusercontent.com/38195951/131271153-93a452fa-ca09-4a43-b62f-decb9c8d9899.gif)
+![zoom](https://user-images.githubusercontent.com/38195951/131271152-319d9213-5753-49b2-a5c5-241e39153c02.gif)
 
 To do:
 - Saving images!
