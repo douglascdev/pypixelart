@@ -6,15 +6,15 @@ pypixelart has many exciting functionalities, including
 - Vim keybindings by default!
 - A grid!
 
-<img src="https://gist.github.com/douglascdev/0668bc014d1caaf291ef513a51ced42e/raw/bc8ae657d208719e62b7681d78f5c7d67b49f75b/grid.gif" width="300">
+<img src="https://gist.github.com/douglascdev/0668bc014d1caaf291ef513a51ced42e/raw/bc8ae657d208719e62b7681d78f5c7d67b49f75b/grid.gif?raw=true" width="300">
 
 - Vertical and horizontal symmetry to draw the same pixel in two sides!
 
-<img src="https://gist.github.com/douglascdev/0668bc014d1caaf291ef513a51ced42e/raw/bc8ae657d208719e62b7681d78f5c7d67b49f75b/symmetry.gif" width="300">
+<img src="https://gist.github.com/douglascdev/0668bc014d1caaf291ef513a51ced42e/raw/bc8ae657d208719e62b7681d78f5c7d67b49f75b/symmetry.gif?raw=true" width="300">
 
 - Zoom !
 
-<img src="https://gist.github.com/douglascdev/0668bc014d1caaf291ef513a51ced42e/raw/bc8ae657d208719e62b7681d78f5c7d67b49f75b/zoom.gif" width="300">
+<img src="https://gist.github.com/douglascdev/0668bc014d1caaf291ef513a51ced42e/raw/bc8ae657d208719e62b7681d78f5c7d67b49f75b/zoom.gif?raw=true" width="300">
 
 To do:
 - Saving images!
