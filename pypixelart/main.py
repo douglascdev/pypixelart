@@ -123,6 +123,7 @@ def main(filepath, resolution):
         image = pg.Surface(img_size)
 
     cursor_rect = pg.Rect((0, 0), (0, 0))
+    cursor_color = {"color": white}
 
     img_screen_pos, last_img_screen_pos = None, None
 
@@ -141,6 +142,19 @@ def main(filepath, resolution):
 
     grid = {
         "on": False,
+    }
+
+    color_selection = {
+        "on": False,
+    }
+
+    pallete_colors = {
+        "red": pg.Color(172, 50, 50),
+        "cream": pg.Color(217, 160, 102),
+        "brown": pg.Color(102, 57, 49),
+        "black": pg.Color(0, 0, 0),
+        "blue": pg.Color(91, 110, 225),
+        "yellow": pg.Color(251, 242, 54),
     }
 
     image_history = list()
@@ -169,6 +183,12 @@ def main(filepath, resolution):
             (symmetry["status"].value + 1) % len(list(SymmetryType))
         )
 
+    def set_color_selection():
+        color_selection["on"] = not color_selection["on"]
+
+    def set_cursor_color(selected_color: pg.Color):
+        cursor_color["color"] = selected_color
+
     def cursor_coords_in_pixels() -> Tuple[int, int]:
         if not all((cursor_rect, last_img_screen_pos)):
             return 0, 0
@@ -179,7 +199,7 @@ def main(filepath, resolution):
     def draw_pixel():
         cursor_coords = list(cursor_coords_in_pixels())
         image_history.append(image.copy())
-        image.set_at(cursor_coords, white)
+        image.set_at(cursor_coords, cursor_color["color"])
 
         if symmetry["status"] != SymmetryType.NoSymmetry:
             middle_w, middle_h = image.get_width() // 2, image.get_height() // 2
@@ -199,7 +219,7 @@ def main(filepath, resolution):
             image.blit(saved_img, (0, 0), saved_img.get_rect())
 
     zoom_g, cursor_g = "Zoom", "Move Cursor"
-    keybindings = (
+    keybindings = [
         KeyBinding(pg.K_i, "Draw", lambda: draw_pixel(), on_pressed=True),
         KeyBinding(pg.K_u, "Undo", lambda: undo(), on_pressed=True),
         KeyBinding(pg.K_n, zoom_g, lambda: change_zoom(True), on_pressed=True),
@@ -210,7 +230,10 @@ def main(filepath, resolution):
         KeyBinding(pg.K_h, cursor_g, lambda: move_cursor(-1, 0)),
         KeyBinding(pg.K_g, "Grid", lambda: set_grid()),
         KeyBinding(pg.K_s, "Symmetry", lambda: set_symmetry()),
-    )
+        KeyBinding(pg.K_c, "Color selection", lambda: set_color_selection()),
+    ]
+
+    keybindings += [KeyBinding(pg.K_0 + i, "Color", lambda: set_cursor_color(name_color[1])) for i, name_color in enumerate(pallete_colors.items(), start=1)]
 
     while True:
         screen.fill(grey)
@@ -316,8 +339,8 @@ def main(filepath, resolution):
                 )
 
         # Draws the rectangle that corresponds to the cursor
-        cursor_color = black if grid["on"] else white
-        pg.draw.rect(screen, cursor_color, cursor_rect, width=cursor_line_width)
+        cursor_image_color = black if grid["on"] else white
+        pg.draw.rect(screen, cursor_image_color, cursor_rect, width=cursor_line_width)
 
         # Draws keybindings on screen
         binding_text_position = rectangle_rect.move(0, (rectangle_h + 20))
@@ -346,6 +369,34 @@ def main(filepath, resolution):
         img_rect_pos = resized_img.get_rect().move(img_screen_pos)
         if not img_rect_pos.colliderect(cursor_rect):
             cursor_rect.x, cursor_rect.y = cursor_rect_backup
+
+        # Color selection
+        if color_selection["on"]:
+            palette_rect = pg.Rect((0, 0), (screen.get_width() // 2, screen.get_height() // 2))
+            palette_surface = pg.Surface((palette_rect.w, palette_rect.h))
+            palette_surface.fill(black)
+
+            for i, name_color in enumerate(pallete_colors.items(), start=1):
+                name, color = name_color
+                color_surface = pg.Surface((palette_rect.w // 10, palette_rect.h // 10))
+                pg.draw.rect(color_surface, color, color_surface.get_rect())
+                color_binding_text = new_text_surface(str(i), color=~color)
+                center_x = color_surface.get_rect().center[0] - color_binding_text.get_width() // 2
+                center_y = color_surface.get_rect().center[1] - color_binding_text.get_height() // 2
+                color_surface.blit(color_binding_text, (center_x, center_y))
+                palette_surface.blit(color_surface, ((i - 1) * color_surface.get_width(), 0))
+
+            pg.draw.rect(palette_surface, white, palette_rect, width=line_width)
+            palette_rect.x, palette_rect.y = rect_screen_center(palette_rect, center_x=True, center_y=True)
+            screen.blit(palette_surface, palette_rect)
+
+            # Draws color selection title
+            cursor_coords_text_pos = list(palette_rect.midtop)
+            text = f"Color selection"
+            text_surface = new_text_surface(text, color=white)
+            cursor_coords_text_pos[0] -= text_surface.get_width() // 2
+            cursor_coords_text_pos[1] -= 20
+            blit_text(text_surface, cursor_coords_text_pos)
 
         pg.display.flip()
 
