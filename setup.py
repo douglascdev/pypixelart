@@ -17,7 +17,7 @@ setup(
     python_requires=">=3.6",
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
-        "Intended Audience :: Developers",
+        "Intended Audience :: End Users/Desktop",
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
         "Programming Language :: Python :: 3",
