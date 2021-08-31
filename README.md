@@ -2,6 +2,11 @@
 
 ![pypixelart-compressed](https://user-images.githubusercontent.com/38195951/131579379-96c7e154-b8d4-4800-863e-4f1d541d1764.gif)
 
+The idea behind pypixelart is uniting:
+ - a [cmdpxl](https://github.com/knosmos/cmdpxl) inspired pixel image editor applied to pixel art.
+ - [vim](https://github.com/vim/vim) 's keyboard-centered approach to improve productivity. Pretty hard to do with an image editor, but we'll try.
+ - Some very useful functionalities from [aseprite](https://github.com/aseprite/aseprite) and other pixel art editors, such as screen symmetry.
+
 ## Features
 pypixelart has many exciting functionalities, including
 - Editing pixels *one at a time*!
