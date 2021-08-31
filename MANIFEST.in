@@ -1,2 +1,2 @@
 include requirements.txt
-recursive-include assets *
+recursive-include pypixelart/assets/fonts *

@@ -25,7 +25,7 @@ def resize_surface_by_percentage(surface: pg.Surface, percentage: int) -> pg.Sur
 
 def new_text_surface(text: str, size: int = 12, color: pg.color.Color = black):
     default_font = (
-        Path(__file__).parent / ".." / "assets" / "fonts" / "PressStart2P-Regular.ttf"
+        Path(__file__).parent / "assets" / "fonts" / "PressStart2P-Regular.ttf"
     ).resolve()
     font = pygame.font.Font(default_font, size)
     return font.render(text, False, color, None)
