@@ -1,8 +1,8 @@
 import itertools
 import sys
-from enum import Enum, auto, IntEnum
+from enum import IntEnum
 from pathlib import Path
-from typing import Tuple, Union, Callable, Iterable, List
+from typing import Tuple, Union, Callable, Iterable
 
 import click
 import pygame as pg
@@ -231,6 +231,7 @@ def main(filepath, resolution):
         KeyBinding(pg.K_h, cursor_g, lambda: move_cursor(-1, 0)),
         KeyBinding(pg.K_g, "Grid", lambda: set_grid()),
         KeyBinding(pg.K_s, "Symmetry", lambda: set_symmetry()),
+        KeyBinding(pg.K_ESCAPE, "Exit", lambda: sys.exit()),
         KeyBinding(pg.K_c, "Color selection", lambda: set_color_selection()),
     ]
 
