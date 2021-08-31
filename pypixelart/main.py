@@ -229,10 +229,15 @@ def main(filepath, resolution):
             image.fill((0, 0, 0, 0))
             image.blit(saved_img, (0, 0), saved_img.get_rect())
 
+    def save():
+        pg.image.save(image, filepath)
+        click.echo(f"Saved {filepath}")
+
     zoom_g, cursor_g = "Zoom", "Move Cursor"
     keybindings = [
         KeyBinding(pg.K_i, "Draw", lambda: draw_pixel(), on_pressed=True),
         KeyBinding(pg.K_u, "Undo", lambda: undo(), on_pressed=True),
+        KeyBinding(pg.K_w, "Save file", lambda: save()),
         KeyBinding(pg.K_n, zoom_g, lambda: change_zoom(True), on_pressed=True),
         KeyBinding(pg.K_b, zoom_g, lambda: change_zoom(False), on_pressed=True),
         KeyBinding(pg.K_k, cursor_g, lambda: move_cursor(0, -1)),

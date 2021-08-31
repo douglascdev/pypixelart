@@ -5,6 +5,8 @@
 ## Features
 pypixelart has many exciting functionalities, including
 - Editing pixels *one at a time*!
+- Saving images!
+- An undo function!
 - Vim keybindings by default!
 - A grid!
 
@@ -18,10 +20,8 @@ pypixelart has many exciting functionalities, including
 
 ![zoom](https://user-images.githubusercontent.com/38195951/131271152-319d9213-5753-49b2-a5c5-241e39153c02.gif)
 
-- An undo function!
 
 To do:
-- Saving images!
 - A fill tool!
 - Cool image filters!
 - Color palette presets
