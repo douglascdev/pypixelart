@@ -187,6 +187,7 @@ def main(filepath, resolution):
         color_selection["on"] = not color_selection["on"]
 
     def set_cursor_color(selected_color: pg.Color):
+        color_selection["on"] = False
         cursor_color["color"] = selected_color
 
     def cursor_coords_in_pixels() -> Tuple[int, int]:
@@ -234,7 +235,7 @@ def main(filepath, resolution):
     ]
 
     keybindings += [
-        KeyBinding(pg.K_0 + i, "Color", lambda: set_cursor_color(name_color[1]))
+        KeyBinding(pg.key.key_code(str(i)), "Color", lambda c=name_color[1]: set_cursor_color(c))
         for i, name_color in enumerate(pallete_colors.items(), start=1)
     ]
 
