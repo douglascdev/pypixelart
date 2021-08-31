@@ -185,15 +185,9 @@ def main(filepath, resolution):
             middle_w, middle_h = image.get_width() // 2, image.get_height() // 2
             if symmetry["status"] == SymmetryType.Vertical:
 
-                if cursor_coords[0] == middle_w:
-                    return
-
                 cursor_coords[0] = middle_w + (middle_w - cursor_coords[0]) - 1
                 image.set_at(cursor_coords, white)
             elif symmetry["status"] == SymmetryType.Horizontal:
-
-                if cursor_coords[1] == middle_h:
-                    return
 
                 cursor_coords[1] = middle_h + (middle_h - cursor_coords[1]) - 1
                 image.set_at(cursor_coords, white)
