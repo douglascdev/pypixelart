@@ -41,6 +41,6 @@ setup(
     name="pypixelart",
     packages=find_packages(include=["pypixelart", "pypixelart.*"]),
     url="https://github.com/douglascdev/pypixelart",
-    version="0.1.8",
+    version="0.1.0",
     zip_safe=False,
 )
