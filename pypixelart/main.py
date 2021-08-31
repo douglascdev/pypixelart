@@ -353,11 +353,10 @@ def main(filepath, resolution):
             blit_text(text_surface, text_rect)
 
         # Draws cursor coordinates above the rectangle
-        cursor_coords_text_pos = list(rectangle_rect.midtop)
+        cursor_coords_text_pos = list(rectangle_rect.topleft)
         cursor_pixels_x, cursor_pixels_y = cursor_coords_in_pixels()
         text = f"({cursor_pixels_x}, {cursor_pixels_y})"
         text_surface = new_text_surface(text, color=white)
-        cursor_coords_text_pos[0] -= text_surface.get_width() // 2
         cursor_coords_text_pos[1] -= 20
         blit_text(text_surface, cursor_coords_text_pos)
 
