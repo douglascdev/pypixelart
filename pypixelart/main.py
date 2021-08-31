@@ -233,7 +233,10 @@ def main(filepath, resolution):
         KeyBinding(pg.K_c, "Color selection", lambda: set_color_selection()),
     ]
 
-    keybindings += [KeyBinding(pg.K_0 + i, "Color", lambda: set_cursor_color(name_color[1])) for i, name_color in enumerate(pallete_colors.items(), start=1)]
+    keybindings += [
+        KeyBinding(pg.K_0 + i, "Color", lambda: set_cursor_color(name_color[1]))
+        for i, name_color in enumerate(pallete_colors.items(), start=1)
+    ]
 
     while True:
         screen.fill(grey)
@@ -360,6 +363,32 @@ def main(filepath, resolution):
         cursor_coords_text_pos[1] -= 20
         blit_text(text_surface, cursor_coords_text_pos)
 
+        # Draws selected color
+        selected_color_text = new_text_surface("Color: ", color=white)
+        selected_color_surface = pg.Surface(
+            (
+                selected_color_text.get_width() + selected_color_text.get_height(),
+                selected_color_text.get_height(),
+            ),
+            pygame.SRCALPHA,
+        )
+        selected_color_surface.blit(selected_color_text, (0, 0))
+        pg.draw.rect(
+            selected_color_surface,
+            cursor_color["color"],
+            pg.Rect(
+                selected_color_text.get_rect().topright,
+                (selected_color_text.get_height(), selected_color_text.get_height()),
+            ),
+        )
+        screen.blit(
+            selected_color_surface,
+            (
+                rectangle_rect.topright[0] - selected_color_surface.get_width(),
+                cursor_coords_text_pos[1],
+            ),
+        )
+
         cursor_rect_backup = cursor_rect.x, cursor_rect.y
 
         handle_input(keybindings)
@@ -371,7 +400,9 @@ def main(filepath, resolution):
 
         # Color selection
         if color_selection["on"]:
-            palette_rect = pg.Rect((0, 0), (screen.get_width() // 2, screen.get_height() // 2))
+            palette_rect = pg.Rect(
+                (0, 0), (screen.get_width() // 2, screen.get_height() // 2)
+            )
             palette_surface = pg.Surface((palette_rect.w, palette_rect.h))
             palette_surface.fill(black)
 
@@ -380,13 +411,23 @@ def main(filepath, resolution):
                 color_surface = pg.Surface((palette_rect.w // 10, palette_rect.h // 10))
                 pg.draw.rect(color_surface, color, color_surface.get_rect())
                 color_binding_text = new_text_surface(str(i), color=~color)
-                center_x = color_surface.get_rect().center[0] - color_binding_text.get_width() // 2
-                center_y = color_surface.get_rect().center[1] - color_binding_text.get_height() // 2
+                center_x = (
+                    color_surface.get_rect().center[0]
+                    - color_binding_text.get_width() // 2
+                )
+                center_y = (
+                    color_surface.get_rect().center[1]
+                    - color_binding_text.get_height() // 2
+                )
                 color_surface.blit(color_binding_text, (center_x, center_y))
-                palette_surface.blit(color_surface, ((i - 1) * color_surface.get_width(), 0))
+                palette_surface.blit(
+                    color_surface, ((i - 1) * color_surface.get_width(), 0)
+                )
 
             pg.draw.rect(palette_surface, white, palette_rect, width=line_width)
-            palette_rect.x, palette_rect.y = rect_screen_center(palette_rect, center_x=True, center_y=True)
+            palette_rect.x, palette_rect.y = rect_screen_center(
+                palette_rect, center_x=True, center_y=True
+            )
             screen.blit(palette_surface, palette_rect)
 
             # Draws color selection title
