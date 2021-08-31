@@ -1,5 +1,7 @@
 # pypixelart: a keyboard-centered approach to pixel art
 
+![pypixelart-compressed](https://user-images.githubusercontent.com/38195951/131579379-96c7e154-b8d4-4800-863e-4f1d541d1764.gif)
+
 ## Features
 pypixelart has many exciting functionalities, including
 - Editing pixels *one at a time*!
@@ -16,9 +18,10 @@ pypixelart has many exciting functionalities, including
 
 ![zoom](https://user-images.githubusercontent.com/38195951/131271152-319d9213-5753-49b2-a5c5-241e39153c02.gif)
 
+- An undo function!
+
 To do:
 - Saving images!
-- An undo function!
 - A fill tool!
 - Cool image filters!
 - Color palette presets

@@ -107,9 +107,6 @@ def handle_input(keybindings: Iterable[KeyBinding]):
 )
 def main(filepath, resolution):
     pg.init()
-    screen = pg.display.set_mode((600, 600), pg.RESIZABLE)
-    app_name = click.get_current_context().command.name
-    pg.display.set_caption(app_name)
 
     path = Path(filepath)
     if path.exists() and path.is_file():
@@ -120,7 +117,11 @@ def main(filepath, resolution):
             if resolution
             else map(int, (input(f"Image {x}: ") for x in ("width", "height")))
         )
-        image = pg.Surface(img_size)
+        image = pg.Surface(img_size, pygame.SRCALPHA)
+
+    screen = pg.display.set_mode((600, 600), pg.RESIZABLE)
+    app_name = click.get_current_context().command.name
+    pg.display.set_caption(app_name)
 
     cursor_rect = pg.Rect((0, 0), (0, 0))
     cursor_color = {"color": white}
@@ -148,6 +149,11 @@ def main(filepath, resolution):
         "on": False,
     }
 
+    show_bindings = {
+        "on": False,
+    }
+    show_bindings_obj = KeyBinding(pg.K_SPACE, "Help", lambda: set_show_bindings())
+
     pallete_colors = {
         "red": pg.Color(172, 50, 50),
         "cream": pg.Color(217, 160, 102),
@@ -155,6 +161,7 @@ def main(filepath, resolution):
         "black": pg.Color(0, 0, 0),
         "blue": pg.Color(91, 110, 225),
         "yellow": pg.Color(251, 242, 54),
+        "alpha": pg.Color(0, 0, 0, 0),
     }
 
     image_history = list()
@@ -186,6 +193,9 @@ def main(filepath, resolution):
     def set_color_selection():
         color_selection["on"] = not color_selection["on"]
 
+    def set_show_bindings():
+        show_bindings["on"] = not show_bindings["on"]
+
     def set_cursor_color(selected_color: pg.Color):
         color_selection["on"] = False
         cursor_color["color"] = selected_color
@@ -207,11 +217,11 @@ def main(filepath, resolution):
             if symmetry["status"] == SymmetryType.Vertical:
 
                 cursor_coords[0] = middle_w + (middle_w - cursor_coords[0]) - 1
-                image.set_at(cursor_coords, white)
+                image.set_at(cursor_coords, cursor_color["color"])
             elif symmetry["status"] == SymmetryType.Horizontal:
 
                 cursor_coords[1] = middle_h + (middle_h - cursor_coords[1]) - 1
-                image.set_at(cursor_coords, white)
+                image.set_at(cursor_coords, cursor_color["color"])
 
     def undo():
         if image_history:
@@ -236,9 +246,15 @@ def main(filepath, resolution):
     ]
 
     keybindings += [
-        KeyBinding(pg.key.key_code(str(i)), "Color", lambda c=name_color[1]: set_cursor_color(c))
+        KeyBinding(
+            pg.key.key_code(str(i)),
+            "Color",
+            lambda c=name_color[1]: set_cursor_color(c),
+        )
         for i, name_color in enumerate(pallete_colors.items(), start=1)
     ]
+
+    keybindings += [show_bindings_obj]
 
     while True:
         screen.fill(grey)
@@ -347,16 +363,6 @@ def main(filepath, resolution):
         cursor_image_color = black if grid["on"] else white
         pg.draw.rect(screen, cursor_image_color, cursor_rect, width=cursor_line_width)
 
-        # Draws keybindings on screen
-        binding_text_position = rectangle_rect.move(0, (rectangle_h + 20))
-        grouped_bindings = itertools.groupby(keybindings, lambda b: b.group)
-        for group, bindings in grouped_bindings:
-            text = f"{group}: {', '.join([pg.key.name(binding.keycode) for binding in bindings])}"
-            text_surface = new_text_surface(text, color=white)
-            text_rect = rect_screen_center(binding_text_position, center_x=True)
-            binding_text_position.move_ip(0, text_surface.get_height() + 10)
-            blit_text(text_surface, text_rect)
-
         # Draws cursor coordinates above the rectangle
         cursor_coords_text_pos = list(rectangle_rect.topleft)
         cursor_pixels_x, cursor_pixels_y = cursor_coords_in_pixels()
@@ -399,6 +405,42 @@ def main(filepath, resolution):
         img_rect_pos = resized_img.get_rect().move(img_screen_pos)
         if not img_rect_pos.colliderect(cursor_rect):
             cursor_rect.x, cursor_rect.y = cursor_rect_backup
+
+        # Draws keybindings on screen
+        if show_bindings["on"]:
+            grouped_bindings = itertools.groupby(keybindings, lambda b: b.group)
+            keybindings_surface = pg.Surface(
+                (screen.get_width() // 2, screen.get_height() // 2)
+            )
+            keybindings_surface.fill(black)
+            keybindings_rect = keybindings_surface.get_rect()
+            keybindings_rect.x, keybindings_rect.y = rect_screen_center(
+                keybindings_rect, center_x=True, center_y=True
+            )
+
+            binding_text_position = pg.Rect((line_width + 10, 0), (0, 0))
+            for group, bindings in grouped_bindings:
+                text = f"{group}: {', '.join([pg.key.name(binding.keycode) for binding in bindings])}"
+                text_surface = new_text_surface(text, color=white)
+                binding_text_position.move_ip(0, text_surface.get_height() + 10)
+                keybindings_surface.blit(text_surface, binding_text_position)
+
+            pg.draw.rect(
+                keybindings_surface,
+                white,
+                pg.Rect((0, 0), (keybindings_rect.w, keybindings_rect.h)),
+                width=line_width,
+            )
+            screen.blit(keybindings_surface, keybindings_rect)
+        else:
+            binding_text_position = rectangle_rect.move(0, (rectangle_h + 20))
+            text = (
+                f"{show_bindings_obj.group}: {pg.key.name(show_bindings_obj.keycode)}"
+            )
+            text_surface = new_text_surface(text, color=white)
+            text_rect = rect_screen_center(binding_text_position, center_x=True)
+            binding_text_position.move_ip(0, text_surface.get_height() + 10)
+            blit_text(text_surface, text_rect)
 
         # Color selection
         if color_selection["on"]:
