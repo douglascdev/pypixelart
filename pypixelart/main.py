@@ -332,9 +332,9 @@ def main(filepath, resolution):
         KeyBinding(
             pg.key.key_code(str(i)),
             "Color",
-            lambda c=name_color[1]: set_cursor_color(c),
+            lambda c=color: set_cursor_color(c),
         )
-        for i, name_color in enumerate(palette_colors.items(), start=1)
+        for i, (name, color) in enumerate(palette_colors.items(), start=1)
     ]
 
     keybindings += [show_bindings_obj]
