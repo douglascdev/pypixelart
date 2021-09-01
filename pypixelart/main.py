@@ -339,7 +339,7 @@ class PyPixelArt:
         pg.display.set_caption(self.app_name)
 
         self.cursor_rect = pg.Rect((0, 0), (0, 0))
-        self.cursor_draw_color = {"color": white}
+        self.cursor_draw_color = white
 
         self.resized_img_rect = self.last_resized_img_rect = None
 
@@ -358,17 +358,13 @@ class PyPixelArt:
             "changed": False,
         }
 
-        self.grid = {
-            "on": False,
-        }
+        self.grid = False
+        self.color_selection = False
+        self.show_bindings = False
 
-        self.color_selection = {
-            "on": False,
-        }
+        self.symmetry = SymmetryType.NoSymmetry
 
-        self.show_bindings = {
-            "on": False,
-        }
+        self.image_history = list()
 
         self.help_keybinding = KeyBinding(
             pg.K_SPACE, "Help", lambda: self.set_show_bindings()
@@ -383,10 +379,6 @@ class PyPixelArt:
             "yellow": pg.Color(251, 242, 54),
             "alpha": pg.Color(0, 0, 0, 0),
         }
-
-        self.image_history = list()
-
-        self.symmetry = {"status": SymmetryType.NoSymmetry}
 
         zoom_g, cursor_g = "Zoom", "Move Cursor"
         self.keybindings = [
@@ -428,22 +420,22 @@ class PyPixelArt:
         self.cursor_rect.move_ip(x * self.cursor_rect.w, y * self.cursor_rect.h)
 
     def set_grid(self):
-        self.grid["on"] = not self.grid["on"]
+        self.grid = not self.grid
 
     def set_symmetry(self):
-        self.symmetry["status"] = SymmetryType(
-            (self.symmetry["status"].value + 1) % len(list(SymmetryType))
+        self.symmetry = SymmetryType(
+            (self.symmetry.value + 1) % len(list(SymmetryType))
         )
 
     def set_color_selection(self):
-        self.color_selection["on"] = not self.color_selection["on"]
+        self.color_selection = not self.color_selection
 
     def set_show_bindings(self):
-        self.show_bindings["on"] = not self.show_bindings["on"]
+        self.show_bindings = not self.show_bindings
 
     def set_cursor_color(self, selected_color: pg.Color):
-        self.color_selection["on"] = False
-        self.cursor_draw_color["color"] = selected_color
+        self.color_selection = False
+        self.cursor_draw_color = selected_color
 
     def cursor_coords_in_pixels(self) -> Tuple[int, int]:
         if not all((self.cursor_rect, self.last_resized_img_rect)):
@@ -459,20 +451,20 @@ class PyPixelArt:
     def draw_pixel(self):
         cursor_x, cursor_y = self.cursor_coords_in_pixels()
         self.image_history.append(self.image.copy())
-        self.image.set_at((cursor_x, cursor_y), self.cursor_draw_color["color"])
+        self.image.set_at((cursor_x, cursor_y), self.cursor_draw_color)
 
-        if self.symmetry["status"] == SymmetryType.NoSymmetry:
+        if self.symmetry == SymmetryType.NoSymmetry:
             return
 
         middle_w, middle_h = self.image.get_width() // 2, self.image.get_height() // 2
-        if self.symmetry["status"] == SymmetryType.Vertical:
+        if self.symmetry == SymmetryType.Vertical:
 
             cursor_x = middle_w + (middle_w - cursor_x) - 1
-            self.image.set_at((cursor_x, cursor_y), self.cursor_draw_color["color"])
-        elif self.symmetry["status"] == SymmetryType.Horizontal:
+            self.image.set_at((cursor_x, cursor_y), self.cursor_draw_color)
+        elif self.symmetry == SymmetryType.Horizontal:
 
             cursor_y = middle_h + (middle_h - cursor_y) - 1
-            self.image.set_at((cursor_x, cursor_y), self.cursor_draw_color["color"])
+            self.image.set_at((cursor_x, cursor_y), self.cursor_draw_color)
 
     def undo(self):
         if self.image_history:
@@ -515,7 +507,7 @@ class PyPixelArt:
                 cursor_coords=self.cursor_coords_in_pixels(),
             )
 
-            if self.grid["on"]:
+            if self.grid:
                 where = self.resized_img.get_rect().move(
                     (self.resized_img_rect.x, self.resized_img_rect.y)
                 )
@@ -523,14 +515,14 @@ class PyPixelArt:
                 draw_grid(where, grid_rect_size, self.grid_line_width)
 
             draw_symmetry_line(
-                self.symmetry["status"],
+                self.symmetry,
                 self.resized_img.get_rect().move(
                     (self.resized_img_rect.x, self.resized_img_rect.y)
                 ),
                 self.symmetry_line_width,
             )
 
-            cursor_image_color = black if self.grid["on"] else white
+            cursor_image_color = black if self.grid else white
             pg.draw.rect(
                 self.screen,
                 cursor_image_color,
@@ -544,7 +536,7 @@ class PyPixelArt:
 
             rect_top_right_corner_x, _ = self.rectangle_rect.topright
             draw_selected_color(
-                self.cursor_draw_color["color"],
+                self.cursor_draw_color,
                 rect_top_right_corner_x=rect_top_right_corner_x,
                 cursor_coord_text_y=cursor_coords_text_rect.y,
             )
@@ -562,12 +554,12 @@ class PyPixelArt:
                     previous_cursor_y,
                 )
 
-            if self.show_bindings["on"]:
+            if self.show_bindings:
                 draw_keybindings(self.keybindings, self.line_width)
             else:
                 draw_help_keybind(self.help_keybinding, self.rectangle_rect)
 
-            if self.color_selection["on"]:
+            if self.color_selection:
                 draw_color_selection(self.palette_colors, self.line_width)
 
             pg.display.flip()
