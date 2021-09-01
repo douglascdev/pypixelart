@@ -16,6 +16,23 @@ black, white, grey, red = (
 )
 
 
+class SymmetryType(IntEnum):
+    NoSymmetry = (0,)
+    Horizontal = (1,)
+    Vertical = (2,)
+
+
+class KeyBinding:
+    def __init__(self, keycode: int, group: str, func: Callable, on_pressed=False):
+        self.keycode = keycode
+        self.group = group
+        self.func = func
+        self.on_pressed = on_pressed
+
+    def __str__(self):
+        return f"(keycode={pg.key.name(self.keycode)}, group={self.group})"
+
+
 def resize_surface_by_percentage(surface: pg.Surface, percentage: int) -> pg.Surface:
     new_image_resolution = [
         xy * percentage // 100 for xy in (surface.get_width(), surface.get_height())
@@ -36,6 +53,26 @@ def blit_text(
 ):
     surface = draw if isinstance(draw, pg.Surface) else new_text_surface(str(draw))
     pg.display.get_surface().blit(surface, coord)
+
+
+def draw_symmetry_line(sym_type: SymmetryType, rect: pg.Rect, line_width: int):
+    if sym_type == SymmetryType.NoSymmetry:
+        return
+
+    start_x, start_y = (
+        rect.midtop if sym_type == SymmetryType.Vertical else rect.midleft
+    )
+    end_x, end_y = (
+        rect.midbottom if sym_type == SymmetryType.Vertical else rect.midright
+    )
+
+    pg.draw.line(
+        pg.display.get_surface(),
+        black,
+        (start_x, start_y),
+        (end_x, end_y),
+        width=line_width,
+    )
 
 
 def rect_screen_center(
@@ -62,17 +99,6 @@ def draw_welcome_msg(func):
         func()
 
     return wrapper
-
-
-class KeyBinding:
-    def __init__(self, keycode: int, group: str, func: Callable, on_pressed=False):
-        self.keycode = keycode
-        self.group = group
-        self.func = func
-        self.on_pressed = on_pressed
-
-    def __str__(self):
-        return f"(keycode={pg.key.name(self.keycode)}, group={self.group})"
 
 
 def handle_input(keybindings: Iterable[KeyBinding]):
@@ -165,11 +191,6 @@ def main(filepath, resolution):
     }
 
     image_history = list()
-
-    class SymmetryType(IntEnum):
-        NoSymmetry = (0,)
-        Horizontal = (1,)
-        Vertical = (2,)
 
     symmetry = {"status": SymmetryType.NoSymmetry}
 
@@ -330,39 +351,11 @@ def main(filepath, resolution):
                     )
 
         # Draws a line indicating where symmetry starts
-        if symmetry["status"] != SymmetryType.NoSymmetry:
-            if symmetry["status"] == SymmetryType.Vertical:
-                symmetry_line_start = (
-                    resized_img.get_rect().midtop[0] + img_screen_pos[0],
-                    resized_img.get_rect().midtop[1] + img_screen_pos[1],
-                )
-                symmetry_line_end = (
-                    resized_img.get_rect().midbottom[0] + img_screen_pos[0],
-                    resized_img.get_rect().midbottom[1] + img_screen_pos[1],
-                )
-                pg.draw.line(
-                    screen,
-                    black,
-                    symmetry_line_start,
-                    symmetry_line_end,
-                    width=symmetry_line_width,
-                )
-            elif symmetry["status"] == SymmetryType.Horizontal:
-                symmetry_line_start = (
-                    resized_img.get_rect().midleft[0] + img_screen_pos[0],
-                    resized_img.get_rect().midleft[1] + img_screen_pos[1],
-                )
-                symmetry_line_end = (
-                    resized_img.get_rect().midright[0] + img_screen_pos[0],
-                    resized_img.get_rect().midright[1] + img_screen_pos[1],
-                )
-                pg.draw.line(
-                    screen,
-                    black,
-                    symmetry_line_start,
-                    symmetry_line_end,
-                    width=symmetry_line_width,
-                )
+        draw_symmetry_line(
+            symmetry["status"],
+            resized_img.get_rect().move(img_screen_pos),
+            symmetry_line_width,
+        )
 
         # Draws the rectangle that corresponds to the cursor
         cursor_image_color = black if grid["on"] else white
