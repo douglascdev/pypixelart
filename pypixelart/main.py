@@ -354,9 +354,10 @@ def main(filepath, resolution):
         # Draws the selected image
         resized_img = resize_surface_by_percentage(image, zoom["percent"])
         last_resized_img_rect = resized_img_rect
-        resized_img_rect = pg.Rect(rect_screen_center(
-            resized_img.get_rect(), center_x=True, center_y=True
-        ), (resized_img.get_width(), resized_img.get_height()))
+        resized_img_rect = pg.Rect(
+            rect_screen_center(resized_img.get_rect(), center_x=True, center_y=True),
+            (resized_img.get_width(), resized_img.get_height()),
+        )
         actual_rect = resized_img.get_rect()
         actual_rect.x, actual_rect.y = resized_img_rect.x, resized_img_rect.y
         actual_rect.w, actual_rect.h = resized_img_rect.w, resized_img_rect.h
@@ -375,7 +376,9 @@ def main(filepath, resolution):
         pg.draw.rect(screen, white, rectangle_rect, width=line_width)
 
         # Initializes cursor values
-        window_resized = last_resized_img_rect and last_resized_img_rect != resized_img_rect
+        window_resized = (
+            last_resized_img_rect and last_resized_img_rect != resized_img_rect
+        )
         if (cursor_rect.x, cursor_rect.y) == (0, 0):
             cursor_rect.x, cursor_rect.y = resized_img_rect.x, resized_img_rect.y
             cursor_rect.w, cursor_rect.h = (
@@ -394,7 +397,9 @@ def main(filepath, resolution):
 
         # Draws a grid of rectangles around each pixel
         if grid["on"]:
-            where = resized_img.get_rect().move((resized_img_rect.x, resized_img_rect.y))
+            where = resized_img.get_rect().move(
+                (resized_img_rect.x, resized_img_rect.y)
+            )
             grid_rect_size = cursor_rect.w, cursor_rect.h
             draw_grid(where, grid_rect_size, grid_line_width)
 
@@ -410,18 +415,22 @@ def main(filepath, resolution):
         pg.draw.rect(screen, cursor_image_color, cursor_rect, width=cursor_line_width)
 
         # Draws cursor coordinates above the rectangle
-        cursor_coords_text_pos = list(rectangle_rect.topleft)
         cursor_pixels_x, cursor_pixels_y = cursor_coords_in_pixels()
         text = f"({cursor_pixels_x}, {cursor_pixels_y})"
         text_surface = new_text_surface(text, color=white)
-        cursor_coords_text_pos[1] -= 20
-        blit_text_to_screen(text_surface, cursor_coords_text_pos)
+        cursor_coords_text_rect = pg.Rect(
+            rectangle_rect.topleft,
+            (text_surface.get_width(), text_surface.get_height()),
+        )
+        cursor_coords_text_rect.move_ip(0, -20)
+        blit_text_to_screen(text_surface, cursor_coords_text_rect)
 
         # Draws selected color
+        rect_top_right_corner_x, _ = rectangle_rect.topright
         draw_selected_color(
             cursor_draw_color["color"],
-            rect_top_right_corner_x=rectangle_rect.topright[0],
-            cursor_coord_text_y=cursor_coords_text_pos[1],
+            rect_top_right_corner_x=rect_top_right_corner_x,
+            cursor_coord_text_y=cursor_coords_text_rect.y,
         )
 
         cursor_rect_backup = cursor_rect.x, cursor_rect.y
@@ -429,7 +438,9 @@ def main(filepath, resolution):
         handle_input(keybindings)
 
         # Restore position from before input if the cursor is outside the rectangle
-        img_rect_pos = resized_img.get_rect().move((resized_img_rect.x, resized_img_rect.y))
+        img_rect_pos = resized_img.get_rect().move(
+            (resized_img_rect.x, resized_img_rect.y)
+        )
         if not img_rect_pos.colliderect(cursor_rect):
             cursor_rect.x, cursor_rect.y = cursor_rect_backup
 
@@ -480,20 +491,17 @@ def main(filepath, resolution):
             for i, name_color in enumerate(palette_colors.items(), start=1):
                 name, color = name_color
                 color_surface = pg.Surface((palette_rect.w // 10, palette_rect.h // 10))
-                pg.draw.rect(color_surface, color, color_surface.get_rect())
+                color_surface_rect = color_surface.get_rect()
+                (
+                    color_surface_center_x,
+                    color_surface_center_y,
+                ) = color_surface_rect.center
+                pg.draw.rect(color_surface, color, color_surface_rect)
                 color_binding_text = new_text_surface(str(i), color=~color)
-                center_x = (
-                    color_surface.get_rect().center[0]
-                    - color_binding_text.get_width() // 2
-                )
-                center_y = (
-                    color_surface.get_rect().center[1]
-                    - color_binding_text.get_height() // 2
-                )
+                center_x = color_surface_center_x - color_binding_text.get_width() // 2
+                center_y = color_surface_center_y - color_binding_text.get_height() // 2
                 color_surface.blit(color_binding_text, (center_x, center_y))
-                palette_surface.blit(
-                    color_surface, ((i - 1) * color_surface.get_width(), 0)
-                )
+                palette_surface.blit(color_surface, ((i - 1) * color_surface_rect.w, 0))
 
             pg.draw.rect(palette_surface, white, palette_rect, width=line_width)
             palette_rect.x, palette_rect.y = rect_screen_center(
@@ -502,12 +510,18 @@ def main(filepath, resolution):
             screen.blit(palette_surface, palette_rect)
 
             # Draws color selection title
-            cursor_coords_text_pos = list(palette_rect.midtop)
-            text = f"Color selection"
-            text_surface = new_text_surface(text, color=white)
-            cursor_coords_text_pos[0] -= text_surface.get_width() // 2
-            cursor_coords_text_pos[1] -= 20
-            blit_text_to_screen(text_surface, cursor_coords_text_pos)
+            palette_mid_top_x, palette_mid_top_y = palette_rect.midtop
+            selection_title_surface = new_text_surface("Color selection", color=white)
+            selection_title_pos = (
+                palette_mid_top_x - selection_title_surface.get_width() // 2,
+                palette_mid_top_y - 20,
+            )
+            selection_title_size = (
+                selection_title_surface.get_width(),
+                selection_title_surface.get_height(),
+            )
+            selection_title_rect = pg.Rect(selection_title_pos, selection_title_size)
+            blit_text_to_screen(selection_title_surface, selection_title_rect)
 
         pg.display.flip()
 
