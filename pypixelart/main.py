@@ -225,7 +225,7 @@ def main(filepath, resolution):
     }
     show_bindings_obj = KeyBinding(pg.K_SPACE, "Help", lambda: set_show_bindings())
 
-    pallete_colors = {
+    palette_colors = {
         "red": pg.Color(172, 50, 50),
         "cream": pg.Color(217, 160, 102),
         "brown": pg.Color(102, 57, 49),
@@ -322,7 +322,7 @@ def main(filepath, resolution):
             "Color",
             lambda c=name_color[1]: set_cursor_color(c),
         )
-        for i, name_color in enumerate(pallete_colors.items(), start=1)
+        for i, name_color in enumerate(palette_colors.items(), start=1)
     ]
 
     keybindings += [show_bindings_obj]
@@ -461,7 +461,7 @@ def main(filepath, resolution):
             palette_surface = pg.Surface((palette_rect.w, palette_rect.h))
             palette_surface.fill(black)
 
-            for i, name_color in enumerate(pallete_colors.items(), start=1):
+            for i, name_color in enumerate(palette_colors.items(), start=1):
                 name, color = name_color
                 color_surface = pg.Surface((palette_rect.w // 10, palette_rect.h // 10))
                 pg.draw.rect(color_surface, color, color_surface.get_rect())
