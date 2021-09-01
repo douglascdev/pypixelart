@@ -284,20 +284,22 @@ def main(filepath, resolution):
         return coord_x, coord_y
 
     def draw_pixel():
-        cursor_coords = list(cursor_coords_in_pixels())
+        cursor_x, cursor_y = cursor_coords_in_pixels()
         image_history.append(image.copy())
-        image.set_at(cursor_coords, cursor_draw_color["color"])
+        image.set_at((cursor_x, cursor_y), cursor_draw_color["color"])
 
-        if symmetry["status"] != SymmetryType.NoSymmetry:
-            middle_w, middle_h = image.get_width() // 2, image.get_height() // 2
-            if symmetry["status"] == SymmetryType.Vertical:
+        if symmetry["status"] == SymmetryType.NoSymmetry:
+            return
 
-                cursor_coords[0] = middle_w + (middle_w - cursor_coords[0]) - 1
-                image.set_at(cursor_coords, cursor_draw_color["color"])
-            elif symmetry["status"] == SymmetryType.Horizontal:
+        middle_w, middle_h = image.get_width() // 2, image.get_height() // 2
+        if symmetry["status"] == SymmetryType.Vertical:
 
-                cursor_coords[1] = middle_h + (middle_h - cursor_coords[1]) - 1
-                image.set_at(cursor_coords, cursor_draw_color["color"])
+            cursor_x = middle_w + (middle_w - cursor_x) - 1
+            image.set_at((cursor_x, cursor_y), cursor_draw_color["color"])
+        elif symmetry["status"] == SymmetryType.Horizontal:
+
+            cursor_y = middle_h + (middle_h - cursor_y) - 1
+            image.set_at((cursor_x, cursor_y), cursor_draw_color["color"])
 
     def undo():
         if image_history:
