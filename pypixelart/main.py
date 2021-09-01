@@ -33,26 +33,41 @@ class KeyBinding:
         return f"(keycode={pg.key.name(self.keycode)}, group={self.group})"
 
 
-def resize_surface_by_percentage(surface: pg.Surface, percentage: int) -> pg.Surface:
-    new_image_resolution = [
-        xy * percentage // 100 for xy in (surface.get_width(), surface.get_height())
-    ]
-    return pg.transform.scale(surface, new_image_resolution)
-
-
-def new_text_surface(text: str, size: int = 12, color: pg.color.Color = black):
-    default_font = (
-        Path(__file__).parent / "assets" / "fonts" / "PressStart2P-Regular.ttf"
-    ).resolve()
-    font = pygame.font.Font(default_font, size)
-    return font.render(text, False, color, None)
-
-
-def blit_text(
+def blit_text_to_screen(
     draw: Union[str, pg.Surface], coord: Union[Iterable, Tuple[int, int], pg.Rect]
 ):
     surface = draw if isinstance(draw, pg.Surface) else new_text_surface(str(draw))
     pg.display.get_surface().blit(surface, coord)
+
+
+def draw_selected_color(
+    color: pg.Color, rect_top_right_corner_x: int, cursor_coord_text_y: int
+):
+    selected_color_text = new_text_surface("Color: ", color=white)
+    w, h = selected_color_text.get_width(), selected_color_text.get_height()
+    selected_color_surface = pg.Surface(
+        (
+            w + h,
+            h,
+        ),
+        pygame.SRCALPHA,
+    )
+    selected_color_surface.blit(selected_color_text, (0, 0))
+    pg.draw.rect(
+        selected_color_surface,
+        color,
+        pg.Rect(
+            selected_color_text.get_rect().topright,
+            (h, h),
+        ),
+    )
+    pg.display.get_surface().blit(
+        selected_color_surface,
+        (
+            rect_top_right_corner_x - w,
+            cursor_coord_text_y,
+        ),
+    )
 
 
 def draw_symmetry_line(sym_type: SymmetryType, rect: pg.Rect, line_width: int):
@@ -90,60 +105,12 @@ def draw_grid(where: pg.Rect, size: Tuple[int, int], line_width: int):
         )
 
 
-def draw_selected_color(
-    color: pg.Color, rect_top_right_corner_x: int, cursor_coord_text_y: int
-):
-    selected_color_text = new_text_surface("Color: ", color=white)
-    w, h = selected_color_text.get_width(), selected_color_text.get_height()
-    selected_color_surface = pg.Surface(
-        (
-            w + h,
-            h,
-        ),
-        pygame.SRCALPHA,
-    )
-    selected_color_surface.blit(selected_color_text, (0, 0))
-    pg.draw.rect(
-        selected_color_surface,
-        color,
-        pg.Rect(
-            selected_color_text.get_rect().topright,
-            (h, h),
-        ),
-    )
-    pg.display.get_surface().blit(
-        selected_color_surface,
-        (
-            rect_top_right_corner_x - w,
-            cursor_coord_text_y,
-        ),
-    )
-
-
-def rect_screen_center(
-    rect: pg.Rect, center_x=False, center_y=False
-) -> Tuple[int, int]:
-    screen = pygame.display.get_surface()
-    rect = rect.copy()
-
-    if center_x:
-        rect.x = screen.get_rect().centerx - rect.w // 2
-
-    if center_y:
-        rect.y = screen.get_rect().centery - rect.h // 2
-
-    return rect.x, rect.y
-
-
-def draw_welcome_msg(func):
-    def wrapper():
-        click.clear()
-        click.echo(
-            click.style("pypixelart - A TOTALLY PRACTICAL IMAGE EDITOR", fg="red")
-        )
-        func()
-
-    return wrapper
+def new_text_surface(text: str, size: int = 12, color: pg.color.Color = black):
+    default_font = (
+        Path(__file__).parent / "assets" / "fonts" / "PressStart2P-Regular.ttf"
+    ).resolve()
+    font = pygame.font.Font(default_font, size)
+    return font.render(text, False, color, None)
 
 
 def handle_input(keybindings: Iterable[KeyBinding]):
@@ -162,7 +129,40 @@ def handle_input(keybindings: Iterable[KeyBinding]):
                 binding.func()
 
 
-@draw_welcome_msg
+def rect_screen_center(
+    rect: pg.Rect, center_x=False, center_y=False
+) -> Tuple[int, int]:
+    screen = pygame.display.get_surface()
+    rect = rect.copy()
+
+    if center_x:
+        rect.x = screen.get_rect().centerx - rect.w // 2
+
+    if center_y:
+        rect.y = screen.get_rect().centery - rect.h // 2
+
+    return rect.x, rect.y
+
+
+def resize_surface_by_percentage(surface: pg.Surface, percentage: int) -> pg.Surface:
+    new_image_resolution = [
+        xy * percentage // 100 for xy in (surface.get_width(), surface.get_height())
+    ]
+    return pg.transform.scale(surface, new_image_resolution)
+
+
+def print_welcome_msg(func):
+    def wrapper():
+        click.clear()
+        click.echo(
+            click.style("pypixelart - A TOTALLY PRACTICAL IMAGE EDITOR", fg="red")
+        )
+        func()
+
+    return wrapper
+
+
+@print_welcome_msg
 @click.command(name="pypixelart")
 @click.option(
     "--filepath",
@@ -336,7 +336,7 @@ def main(filepath, resolution):
         text_rect = rect_screen_center(
             text_surface.get_rect().move(0, 10), center_x=True
         )
-        blit_text(text_surface, text_rect)
+        blit_text_to_screen(text_surface, text_rect)
 
         # Draws the selected image
         resized_img = resize_surface_by_percentage(image, zoom["percent"])
@@ -399,7 +399,7 @@ def main(filepath, resolution):
         text = f"({cursor_pixels_x}, {cursor_pixels_y})"
         text_surface = new_text_surface(text, color=white)
         cursor_coords_text_pos[1] -= 20
-        blit_text(text_surface, cursor_coords_text_pos)
+        blit_text_to_screen(text_surface, cursor_coords_text_pos)
 
         # Draws selected color
         draw_selected_color(
@@ -451,7 +451,7 @@ def main(filepath, resolution):
             text_surface = new_text_surface(text, color=white)
             text_rect = rect_screen_center(binding_text_position, center_x=True)
             binding_text_position.move_ip(0, text_surface.get_height() + 10)
-            blit_text(text_surface, text_rect)
+            blit_text_to_screen(text_surface, text_rect)
 
         # Color selection
         if color_selection["on"]:
@@ -491,7 +491,7 @@ def main(filepath, resolution):
             text_surface = new_text_surface(text, color=white)
             cursor_coords_text_pos[0] -= text_surface.get_width() // 2
             cursor_coords_text_pos[1] -= 20
-            blit_text(text_surface, cursor_coords_text_pos)
+            blit_text_to_screen(text_surface, cursor_coords_text_pos)
 
         pg.display.flip()
 
