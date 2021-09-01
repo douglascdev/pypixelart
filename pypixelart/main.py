@@ -105,6 +105,16 @@ def draw_grid(where: pg.Rect, size: Tuple[int, int], line_width: int):
         )
 
 
+def draw_header_text(**kwargs):
+    app_name, path_name, width, height, zoom = (
+        kwargs.get(arg) for arg in ("app_name", "path_name", "width", "height", "zoom")
+    )
+    header_text = f"{app_name}: {path_name} ({width}x{height}) {zoom}%"
+    text_surface = new_text_surface(header_text, color=red)
+    text_rect = rect_screen_center(text_surface.get_rect().move(0, 10), center_x=True)
+    blit_text_to_screen(text_surface, text_rect)
+
+
 def new_text_surface(text: str, size: int = 12, color: pg.color.Color = black):
     default_font = (
         Path(__file__).parent / "assets" / "fonts" / "PressStart2P-Regular.ttf"
@@ -331,12 +341,13 @@ def main(filepath, resolution):
         screen.fill(grey)
 
         # Draws header text
-        header_text = f"{app_name}: {path.name} ({image.get_width()}x{image.get_height()}) {zoom['percent']}%"
-        text_surface = new_text_surface(header_text, color=red)
-        text_rect = rect_screen_center(
-            text_surface.get_rect().move(0, 10), center_x=True
+        draw_header_text(
+            app_name=app_name,
+            path_name=path.name,
+            width=image.get_width(),
+            height=image.get_height(),
+            zoom=zoom["percent"],
         )
-        blit_text_to_screen(text_surface, text_rect)
 
         # Draws the selected image
         resized_img = resize_surface_by_percentage(image, zoom["percent"])
