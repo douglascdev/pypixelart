@@ -185,6 +185,19 @@ def draw_rect_around_resized_img(
     return rectangle_rect
 
 
+def draw_cursor_coordinates(cursor_coords: Tuple[int, int], rectangle_top_left_coord: Tuple[int, int]) -> pg.Rect:
+    cursor_pixels_x, cursor_pixels_y = cursor_coords
+    text = f"({cursor_pixels_x}, {cursor_pixels_y})"
+    text_surface = new_text_surface(text, color=white)
+    cursor_coords_text_rect = pg.Rect(
+        rectangle_top_left_coord,
+        (text_surface.get_width(), text_surface.get_height()),
+    )
+    cursor_coords_text_rect.move_ip(0, -20)
+    blit_text_to_screen(text_surface, cursor_coords_text_rect)
+    return cursor_coords_text_rect
+
+
 def new_text_surface(text: str, size: int = 12, color: pg.color.Color = black):
     default_font = (
         Path(__file__).parent / "assets" / "fonts" / "PressStart2P-Regular.ttf"
@@ -238,7 +251,7 @@ def update_cursor_pos(**kwargs):
         "original_image_rect",
         "cursor_rect",
         "zoom",
-        "cursor_coords_func",
+        "cursor_coords",
     )
     (
         resized_img_rect,
@@ -246,7 +259,7 @@ def update_cursor_pos(**kwargs):
         original_image_rect,
         cursor_rect,
         zoom,
-        cursor_coords_func,
+        cursor_coords,
     ) = (kwargs.get(arg) for arg in args)
 
     window_resized = last_resized_img_rect and last_resized_img_rect != resized_img_rect
@@ -259,7 +272,7 @@ def update_cursor_pos(**kwargs):
         )
     elif zoom["changed"] or window_resized:
         zoom["changed"] = False
-        cursor_rect.x, cursor_rect.y = cursor_coords_func()
+        cursor_rect.x, cursor_rect.y = cursor_coords
         cursor_rect.w, cursor_rect.h = (
             resized_img_rect.w // original_image_rect.w,
             resized_img_rect.h // original_image_rect.h,
@@ -474,7 +487,7 @@ def main(filepath, resolution):
             original_image_rect=image.get_rect(),
             cursor_rect=cursor_rect,
             zoom=zoom,
-            cursor_coords_func=cursor_coords_in_pixels,
+            cursor_coords=cursor_coords_in_pixels(),
         )
 
         # Draws a grid of rectangles around each pixel
@@ -497,15 +510,7 @@ def main(filepath, resolution):
         pg.draw.rect(screen, cursor_image_color, cursor_rect, width=cursor_line_width)
 
         # Draws cursor coordinates above the rectangle
-        cursor_pixels_x, cursor_pixels_y = cursor_coords_in_pixels()
-        text = f"({cursor_pixels_x}, {cursor_pixels_y})"
-        text_surface = new_text_surface(text, color=white)
-        cursor_coords_text_rect = pg.Rect(
-            rectangle_rect.topleft,
-            (text_surface.get_width(), text_surface.get_height()),
-        )
-        cursor_coords_text_rect.move_ip(0, -20)
-        blit_text_to_screen(text_surface, cursor_coords_text_rect)
+        cursor_coords_text_rect = draw_cursor_coordinates(cursor_coords_in_pixels(), rectangle_rect.topleft)
 
         # Draws selected color
         rect_top_right_corner_x, _ = rectangle_rect.topright
