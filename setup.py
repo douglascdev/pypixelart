@@ -26,7 +26,7 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
     ],
-    description="A totally practical command-line image editor",
+    description="A keyboard-centered approach to pixel art",
     entry_points={
         "console_scripts": [
             "pypixelart=pypixelart.main:main",
