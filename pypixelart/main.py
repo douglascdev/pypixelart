@@ -70,6 +70,50 @@ def draw_selected_color(
     )
 
 
+def draw_color_selection(palette_colors: dict, line_width: int):
+    screen = pg.display.get_surface()
+    palette_rect = pg.Rect(
+        (0, 0), (screen.get_width() // 2, screen.get_height() // 2)
+    )
+    palette_surface = pg.Surface((palette_rect.w, palette_rect.h))
+    palette_surface.fill(black)
+
+    for i, name_color in enumerate(palette_colors.items(), start=1):
+        name, color = name_color
+        color_surface = pg.Surface((palette_rect.w // 10, palette_rect.h // 10))
+        color_surface_rect = color_surface.get_rect()
+        (
+            color_surface_center_x,
+            color_surface_center_y,
+        ) = color_surface_rect.center
+        pg.draw.rect(color_surface, color, color_surface_rect)
+        color_binding_text = new_text_surface(str(i), color=~color)
+        center_x = color_surface_center_x - color_binding_text.get_width() // 2
+        center_y = color_surface_center_y - color_binding_text.get_height() // 2
+        color_surface.blit(color_binding_text, (center_x, center_y))
+        palette_surface.blit(color_surface, ((i - 1) * color_surface_rect.w, 0))
+
+    pg.draw.rect(palette_surface, white, palette_rect, width=line_width)
+    palette_rect.x, palette_rect.y = rect_screen_center(
+        palette_rect, center_x=True, center_y=True
+    )
+    screen.blit(palette_surface, palette_rect)
+
+    # Draws color selection title
+    palette_mid_top_x, palette_mid_top_y = palette_rect.midtop
+    selection_title_surface = new_text_surface("Color selection", color=white)
+    selection_title_pos = (
+        palette_mid_top_x - selection_title_surface.get_width() // 2,
+        palette_mid_top_y - 20,
+    )
+    selection_title_size = (
+        selection_title_surface.get_width(),
+        selection_title_surface.get_height(),
+    )
+    selection_title_rect = pg.Rect(selection_title_pos, selection_title_size)
+    blit_text_to_screen(selection_title_surface, selection_title_rect)
+
+
 def draw_resized_image(image: pg.Surface, zoom: int) -> Tuple[pg.Surface, pg.Rect]:
     resized_img = resize_surface_by_percentage(image, zoom)
     resized_img_rect = pg.Rect(
@@ -520,46 +564,7 @@ def main(filepath, resolution):
 
         # Color selection
         if color_selection["on"]:
-            palette_rect = pg.Rect(
-                (0, 0), (screen.get_width() // 2, screen.get_height() // 2)
-            )
-            palette_surface = pg.Surface((palette_rect.w, palette_rect.h))
-            palette_surface.fill(black)
-
-            for i, name_color in enumerate(palette_colors.items(), start=1):
-                name, color = name_color
-                color_surface = pg.Surface((palette_rect.w // 10, palette_rect.h // 10))
-                color_surface_rect = color_surface.get_rect()
-                (
-                    color_surface_center_x,
-                    color_surface_center_y,
-                ) = color_surface_rect.center
-                pg.draw.rect(color_surface, color, color_surface_rect)
-                color_binding_text = new_text_surface(str(i), color=~color)
-                center_x = color_surface_center_x - color_binding_text.get_width() // 2
-                center_y = color_surface_center_y - color_binding_text.get_height() // 2
-                color_surface.blit(color_binding_text, (center_x, center_y))
-                palette_surface.blit(color_surface, ((i - 1) * color_surface_rect.w, 0))
-
-            pg.draw.rect(palette_surface, white, palette_rect, width=line_width)
-            palette_rect.x, palette_rect.y = rect_screen_center(
-                palette_rect, center_x=True, center_y=True
-            )
-            screen.blit(palette_surface, palette_rect)
-
-            # Draws color selection title
-            palette_mid_top_x, palette_mid_top_y = palette_rect.midtop
-            selection_title_surface = new_text_surface("Color selection", color=white)
-            selection_title_pos = (
-                palette_mid_top_x - selection_title_surface.get_width() // 2,
-                palette_mid_top_y - 20,
-            )
-            selection_title_size = (
-                selection_title_surface.get_width(),
-                selection_title_surface.get_height(),
-            )
-            selection_title_rect = pg.Rect(selection_title_pos, selection_title_size)
-            blit_text_to_screen(selection_title_surface, selection_title_rect)
+            draw_color_selection(palette_colors, line_width)
 
         pg.display.flip()
 
