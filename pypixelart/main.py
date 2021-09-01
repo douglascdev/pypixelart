@@ -207,7 +207,7 @@ def main(filepath, resolution):
     cursor_rect = pg.Rect((0, 0), (0, 0))
     cursor_draw_color = {"color": white}
 
-    img_screen_pos, last_img_screen_pos = None, None
+    resized_img_rect = last_resized_img_rect = None
 
     line_width = 4
     cursor_line_width = line_width // 2
@@ -277,10 +277,10 @@ def main(filepath, resolution):
         cursor_draw_color["color"] = selected_color
 
     def cursor_coords_in_pixels() -> Tuple[int, int]:
-        if not all((cursor_rect, last_img_screen_pos)):
+        if not all((cursor_rect, last_resized_img_rect)):
             return 0, 0
-        coord_x = (cursor_rect.x - last_img_screen_pos[0]) // cursor_rect.w
-        coord_y = (cursor_rect.y - last_img_screen_pos[1]) // cursor_rect.h
+        coord_x = (cursor_rect.x - last_resized_img_rect.x) // cursor_rect.w
+        coord_y = (cursor_rect.y - last_resized_img_rect.y) // cursor_rect.h
         return coord_x, coord_y
 
     def draw_pixel():
@@ -351,16 +351,19 @@ def main(filepath, resolution):
 
         # Draws the selected image
         resized_img = resize_surface_by_percentage(image, zoom["percent"])
-        last_img_screen_pos = img_screen_pos
-        img_screen_pos = rect_screen_center(
+        last_resized_img_rect = resized_img_rect
+        resized_img_rect = pg.Rect(rect_screen_center(
             resized_img.get_rect(), center_x=True, center_y=True
-        )
-        screen.blit(resized_img, img_screen_pos)
+        ), (resized_img.get_width(), resized_img.get_height()))
+        actual_rect = resized_img.get_rect()
+        actual_rect.x, actual_rect.y = resized_img_rect.x, resized_img_rect.y
+        actual_rect.w, actual_rect.h = resized_img_rect.w, resized_img_rect.h
+        screen.blit(resized_img, resized_img_rect)
 
         # Draws the rectangle around the image
         rectangle_x, rectangle_y = (
-            img_screen_pos[0] - line_width,
-            img_screen_pos[1] - line_width,
+            resized_img_rect.x - line_width,
+            resized_img_rect.y - line_width,
         )
         rectangle_w, rectangle_h = (
             resized_img.get_rect().w + line_width,
@@ -370,9 +373,9 @@ def main(filepath, resolution):
         pg.draw.rect(screen, white, rectangle_rect, width=line_width)
 
         # Initializes cursor values
-        window_resized = last_img_screen_pos and last_img_screen_pos != img_screen_pos
+        window_resized = last_resized_img_rect and last_resized_img_rect != resized_img_rect
         if (cursor_rect.x, cursor_rect.y) == (0, 0):
-            cursor_rect.x, cursor_rect.y = img_screen_pos
+            cursor_rect.x, cursor_rect.y = resized_img_rect.x, resized_img_rect.y
             cursor_rect.w, cursor_rect.h = (
                 resized_img.get_width() // image.get_width(),
                 resized_img.get_height() // image.get_height(),
@@ -384,19 +387,19 @@ def main(filepath, resolution):
                 resized_img.get_width() // image.get_width(),
                 resized_img.get_height() // image.get_height(),
             )
-            cursor_rect.x = cursor_rect.x * cursor_rect.w + img_screen_pos[0]
-            cursor_rect.y = cursor_rect.y * cursor_rect.h + img_screen_pos[1]
+            cursor_rect.x = cursor_rect.x * cursor_rect.w + resized_img_rect.x
+            cursor_rect.y = cursor_rect.y * cursor_rect.h + resized_img_rect.y
 
         # Draws a grid of rectangles around each pixel
         if grid["on"]:
-            where = resized_img.get_rect().move(img_screen_pos)
+            where = resized_img.get_rect().move((resized_img_rect.x, resized_img_rect.y))
             grid_rect_size = cursor_rect.w, cursor_rect.h
             draw_grid(where, grid_rect_size, grid_line_width)
 
         # Draws a line indicating where symmetry starts
         draw_symmetry_line(
             symmetry["status"],
-            resized_img.get_rect().move(img_screen_pos),
+            resized_img.get_rect().move((resized_img_rect.x, resized_img_rect.y)),
             symmetry_line_width,
         )
 
@@ -424,7 +427,7 @@ def main(filepath, resolution):
         handle_input(keybindings)
 
         # Restore position from before input if the cursor is outside the rectangle
-        img_rect_pos = resized_img.get_rect().move(img_screen_pos)
+        img_rect_pos = resized_img.get_rect().move((resized_img_rect.x, resized_img_rect.y))
         if not img_rect_pos.colliderect(cursor_rect):
             cursor_rect.x, cursor_rect.y = cursor_rect_backup
 
