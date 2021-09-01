@@ -125,6 +125,20 @@ def draw_header_text(**kwargs):
     blit_text_to_screen(text_surface, text_rect)
 
 
+def draw_rect_around_resized_img(resized_img: pg.Surface, resized_img_rect: pg.Rect, line_width: int) -> pg.Rect:
+    rectangle_x, rectangle_y = (
+        resized_img_rect.x - line_width,
+        resized_img_rect.y - line_width,
+    )
+    rectangle_w, rectangle_h = (
+        resized_img.get_rect().w + line_width,
+        resized_img.get_rect().h + line_width,
+    )
+    rectangle_rect = pg.Rect((rectangle_x, rectangle_y), (rectangle_w, rectangle_h))
+    pg.draw.rect(pg.display.get_surface(), white, rectangle_rect, width=line_width)
+    return rectangle_rect
+
+
 def new_text_surface(text: str, size: int = 12, color: pg.color.Color = black):
     default_font = (
         Path(__file__).parent / "assets" / "fonts" / "PressStart2P-Regular.ttf"
@@ -366,16 +380,7 @@ def main(filepath, resolution):
         resized_img, resized_img_rect = draw_resized_image(image, zoom["percent"])
 
         # Draws the rectangle around the image
-        rectangle_x, rectangle_y = (
-            resized_img_rect.x - line_width,
-            resized_img_rect.y - line_width,
-        )
-        rectangle_w, rectangle_h = (
-            resized_img.get_rect().w + line_width,
-            resized_img.get_rect().h + line_width,
-        )
-        rectangle_rect = pg.Rect((rectangle_x, rectangle_y), (rectangle_w, rectangle_h))
-        pg.draw.rect(screen, white, rectangle_rect, width=line_width)
+        rectangle_rect = draw_rect_around_resized_img(resized_img, resized_img_rect, line_width)
 
         # Initializes cursor values
         window_resized = (
@@ -474,7 +479,7 @@ def main(filepath, resolution):
             )
             screen.blit(keybindings_surface, keybindings_rect)
         else:
-            binding_text_position = rectangle_rect.move(0, (rectangle_h + 20))
+            binding_text_position = rectangle_rect.move(0, (rectangle_rect.h + 20))
             text = (
                 f"{show_bindings_obj.group}: {pg.key.name(show_bindings_obj.keycode)}"
             )
