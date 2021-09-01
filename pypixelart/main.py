@@ -70,6 +70,16 @@ def draw_selected_color(
     )
 
 
+def draw_resized_image(image: pg.Surface, zoom: int) -> Tuple[pg.Surface, pg.Rect]:
+    resized_img = resize_surface_by_percentage(image, zoom)
+    resized_img_rect = pg.Rect(
+        rect_screen_center(resized_img.get_rect(), center_x=True, center_y=True),
+        (resized_img.get_width(), resized_img.get_height()),
+    )
+    pg.display.get_surface().blit(resized_img, resized_img_rect)
+    return resized_img, resized_img_rect
+
+
 def draw_symmetry_line(sym_type: SymmetryType, rect: pg.Rect, line_width: int):
     if sym_type == SymmetryType.NoSymmetry:
         return
@@ -352,16 +362,8 @@ def main(filepath, resolution):
         )
 
         # Draws the selected image
-        resized_img = resize_surface_by_percentage(image, zoom["percent"])
         last_resized_img_rect = resized_img_rect
-        resized_img_rect = pg.Rect(
-            rect_screen_center(resized_img.get_rect(), center_x=True, center_y=True),
-            (resized_img.get_width(), resized_img.get_height()),
-        )
-        actual_rect = resized_img.get_rect()
-        actual_rect.x, actual_rect.y = resized_img_rect.x, resized_img_rect.y
-        actual_rect.w, actual_rect.h = resized_img_rect.w, resized_img_rect.h
-        screen.blit(resized_img, resized_img_rect)
+        resized_img, resized_img_rect = draw_resized_image(image, zoom["percent"])
 
         # Draws the rectangle around the image
         rectangle_x, rectangle_y = (
