@@ -7,17 +7,6 @@ import pygame as pg
 import pygame.font
 
 
-def print_welcome_msg(func):
-    def wrapper():
-        click.clear()
-        click.echo(
-            click.style("pypixelart - A TOTALLY PRACTICAL IMAGE EDITOR", fg="red")
-        )
-        func()
-
-    return wrapper
-
-
 class PyPixelArt:
     def __init__(self, image: pg.Surface, path: pathlib.Path):
         self.image, self.path = image, path
@@ -253,6 +242,17 @@ class PyPixelArt:
             pg.display.flip()
 
             self.clock.tick(60)
+
+
+def print_welcome_msg(func):
+    def wrapper():
+        click.clear()
+        click.echo(
+            click.style("pypixelart - A TOTALLY PRACTICAL IMAGE EDITOR", fg="red")
+        )
+        func()
+
+    return wrapper
 
 
 @print_welcome_msg
