@@ -125,7 +125,9 @@ def draw_header_text(**kwargs):
     blit_text_to_screen(text_surface, text_rect)
 
 
-def draw_rect_around_resized_img(resized_img: pg.Surface, resized_img_rect: pg.Rect, line_width: int) -> pg.Rect:
+def draw_rect_around_resized_img(
+    resized_img: pg.Surface, resized_img_rect: pg.Rect, line_width: int
+) -> pg.Rect:
     rectangle_x, rectangle_y = (
         resized_img_rect.x - line_width,
         resized_img_rect.y - line_width,
@@ -183,6 +185,43 @@ def resize_surface_by_percentage(surface: pg.Surface, percentage: int) -> pg.Sur
         xy * percentage // 100 for xy in (surface.get_width(), surface.get_height())
     ]
     return pg.transform.scale(surface, new_image_resolution)
+
+
+def update_cursor_pos(**kwargs):
+    args = (
+        "resized_img_rect",
+        "last_resized_img_rect",
+        "original_image_rect",
+        "cursor_rect",
+        "zoom",
+        "cursor_coords_func",
+    )
+    (
+        resized_img_rect,
+        last_resized_img_rect,
+        original_image_rect,
+        cursor_rect,
+        zoom,
+        cursor_coords_func,
+    ) = (kwargs.get(arg) for arg in args)
+
+    window_resized = last_resized_img_rect and last_resized_img_rect != resized_img_rect
+    cursor_not_initialized = (cursor_rect.x, cursor_rect.y) == (0, 0)
+    if cursor_not_initialized:
+        cursor_rect.x, cursor_rect.y = resized_img_rect.x, resized_img_rect.y
+        cursor_rect.w, cursor_rect.h = (
+            resized_img_rect.w // original_image_rect.w,
+            resized_img_rect.h // original_image_rect.h,
+        )
+    elif zoom["changed"] or window_resized:
+        zoom["changed"] = False
+        cursor_rect.x, cursor_rect.y = cursor_coords_func()
+        cursor_rect.w, cursor_rect.h = (
+            resized_img_rect.w // original_image_rect.w,
+            resized_img_rect.h // original_image_rect.h,
+        )
+        cursor_rect.x = cursor_rect.x * cursor_rect.w + resized_img_rect.x
+        cursor_rect.y = cursor_rect.y * cursor_rect.h + resized_img_rect.y
 
 
 def print_welcome_msg(func):
@@ -380,28 +419,19 @@ def main(filepath, resolution):
         resized_img, resized_img_rect = draw_resized_image(image, zoom["percent"])
 
         # Draws the rectangle around the image
-        rectangle_rect = draw_rect_around_resized_img(resized_img, resized_img_rect, line_width)
+        rectangle_rect = draw_rect_around_resized_img(
+            resized_img, resized_img_rect, line_width
+        )
 
         # Initializes cursor values
-        window_resized = (
-            last_resized_img_rect and last_resized_img_rect != resized_img_rect
+        update_cursor_pos(
+            resized_img_rect=resized_img_rect,
+            last_resized_img_rect=last_resized_img_rect,
+            original_image_rect=image.get_rect(),
+            cursor_rect=cursor_rect,
+            zoom=zoom,
+            cursor_coords_func=cursor_coords_in_pixels,
         )
-        cursor_not_initialized = (cursor_rect.x, cursor_rect.y) == (0, 0)
-        if cursor_not_initialized:
-            cursor_rect.x, cursor_rect.y = resized_img_rect.x, resized_img_rect.y
-            cursor_rect.w, cursor_rect.h = (
-                resized_img.get_width() // image.get_width(),
-                resized_img.get_height() // image.get_height(),
-            )
-        elif zoom["changed"] or window_resized:
-            zoom["changed"] = False
-            cursor_rect.x, cursor_rect.y = cursor_coords_in_pixels()
-            cursor_rect.w, cursor_rect.h = (
-                resized_img.get_width() // image.get_width(),
-                resized_img.get_height() // image.get_height(),
-            )
-            cursor_rect.x = cursor_rect.x * cursor_rect.w + resized_img_rect.x
-            cursor_rect.y = cursor_rect.y * cursor_rect.h + resized_img_rect.y
 
         # Draws a grid of rectangles around each pixel
         if grid["on"]:
