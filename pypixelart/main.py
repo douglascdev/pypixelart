@@ -90,6 +90,36 @@ def draw_grid(where: pg.Rect, size: Tuple[int, int], line_width: int):
         )
 
 
+def draw_selected_color(
+    color: pg.Color, rect_top_right_corner_x: int, cursor_coord_text_y: int
+):
+    selected_color_text = new_text_surface("Color: ", color=white)
+    w, h = selected_color_text.get_width(), selected_color_text.get_height()
+    selected_color_surface = pg.Surface(
+        (
+            w + h,
+            h,
+        ),
+        pygame.SRCALPHA,
+    )
+    selected_color_surface.blit(selected_color_text, (0, 0))
+    pg.draw.rect(
+        selected_color_surface,
+        color,
+        pg.Rect(
+            selected_color_text.get_rect().topright,
+            (h, h),
+        ),
+    )
+    pg.display.get_surface().blit(
+        selected_color_surface,
+        (
+            rect_top_right_corner_x - w,
+            cursor_coord_text_y,
+        ),
+    )
+
+
 def rect_screen_center(
     rect: pg.Rect, center_x=False, center_y=False
 ) -> Tuple[int, int]:
@@ -165,7 +195,7 @@ def main(filepath, resolution):
     pg.display.set_caption(app_name)
 
     cursor_rect = pg.Rect((0, 0), (0, 0))
-    cursor_color = {"color": white}
+    cursor_draw_color = {"color": white}
 
     img_screen_pos, last_img_screen_pos = None, None
 
@@ -234,7 +264,7 @@ def main(filepath, resolution):
 
     def set_cursor_color(selected_color: pg.Color):
         color_selection["on"] = False
-        cursor_color["color"] = selected_color
+        cursor_draw_color["color"] = selected_color
 
     def cursor_coords_in_pixels() -> Tuple[int, int]:
         if not all((cursor_rect, last_img_screen_pos)):
@@ -246,18 +276,18 @@ def main(filepath, resolution):
     def draw_pixel():
         cursor_coords = list(cursor_coords_in_pixels())
         image_history.append(image.copy())
-        image.set_at(cursor_coords, cursor_color["color"])
+        image.set_at(cursor_coords, cursor_draw_color["color"])
 
         if symmetry["status"] != SymmetryType.NoSymmetry:
             middle_w, middle_h = image.get_width() // 2, image.get_height() // 2
             if symmetry["status"] == SymmetryType.Vertical:
 
                 cursor_coords[0] = middle_w + (middle_w - cursor_coords[0]) - 1
-                image.set_at(cursor_coords, cursor_color["color"])
+                image.set_at(cursor_coords, cursor_draw_color["color"])
             elif symmetry["status"] == SymmetryType.Horizontal:
 
                 cursor_coords[1] = middle_h + (middle_h - cursor_coords[1]) - 1
-                image.set_at(cursor_coords, cursor_color["color"])
+                image.set_at(cursor_coords, cursor_draw_color["color"])
 
     def undo():
         if image_history:
@@ -372,29 +402,10 @@ def main(filepath, resolution):
         blit_text(text_surface, cursor_coords_text_pos)
 
         # Draws selected color
-        selected_color_text = new_text_surface("Color: ", color=white)
-        selected_color_surface = pg.Surface(
-            (
-                selected_color_text.get_width() + selected_color_text.get_height(),
-                selected_color_text.get_height(),
-            ),
-            pygame.SRCALPHA,
-        )
-        selected_color_surface.blit(selected_color_text, (0, 0))
-        pg.draw.rect(
-            selected_color_surface,
-            cursor_color["color"],
-            pg.Rect(
-                selected_color_text.get_rect().topright,
-                (selected_color_text.get_height(), selected_color_text.get_height()),
-            ),
-        )
-        screen.blit(
-            selected_color_surface,
-            (
-                rectangle_rect.topright[0] - selected_color_surface.get_width(),
-                cursor_coords_text_pos[1],
-            ),
+        draw_selected_color(
+            cursor_draw_color["color"],
+            rect_top_right_corner_x=rectangle_rect.topright[0],
+            cursor_coord_text_y=cursor_coords_text_pos[1],
         )
 
         cursor_rect_backup = cursor_rect.x, cursor_rect.y
