@@ -379,7 +379,8 @@ def main(filepath, resolution):
         window_resized = (
             last_resized_img_rect and last_resized_img_rect != resized_img_rect
         )
-        if (cursor_rect.x, cursor_rect.y) == (0, 0):
+        cursor_not_initialized = (cursor_rect.x, cursor_rect.y) == (0, 0)
+        if cursor_not_initialized:
             cursor_rect.x, cursor_rect.y = resized_img_rect.x, resized_img_rect.y
             cursor_rect.w, cursor_rect.h = (
                 resized_img.get_width() // image.get_width(),
