@@ -198,6 +198,45 @@ def draw_cursor_coordinates(cursor_coords: Tuple[int, int], rectangle_top_left_c
     return cursor_coords_text_rect
 
 
+def draw_keybindings(keybindings: Iterable[KeyBinding], line_width: int):
+    screen = pg.display.get_surface()
+    grouped_bindings = itertools.groupby(keybindings, lambda b: b.group)
+    keybindings_surface = pg.Surface(
+        (screen.get_width() // 2, screen.get_height() // 2)
+    )
+    keybindings_surface.fill(black)
+    keybindings_rect = keybindings_surface.get_rect()
+    keybindings_rect.x, keybindings_rect.y = rect_screen_center(
+        keybindings_rect, center_x=True, center_y=True
+    )
+
+    binding_text_position = pg.Rect((line_width + 10, 0), (0, 0))
+    for group, bindings in grouped_bindings:
+        text = f"{group}: {', '.join([pg.key.name(binding.keycode) for binding in bindings])}"
+        text_surface = new_text_surface(text, color=white)
+        binding_text_position.move_ip(0, text_surface.get_height() + 10)
+        keybindings_surface.blit(text_surface, binding_text_position)
+
+    pg.draw.rect(
+        keybindings_surface,
+        white,
+        pg.Rect((0, 0), (keybindings_rect.w, keybindings_rect.h)),
+        width=line_width,
+    )
+    screen.blit(keybindings_surface, keybindings_rect)
+
+
+def draw_help_keybind(help_binding: KeyBinding, rectangle_rect: pg.Rect):
+    binding_text_position = rectangle_rect.move(0, (rectangle_rect.h + 20))
+    text = (
+        f"{help_binding.group}: {pg.key.name(help_binding.keycode)}"
+    )
+    text_surface = new_text_surface(text, color=white)
+    text_rect = rect_screen_center(binding_text_position, center_x=True)
+    binding_text_position.move_ip(0, text_surface.get_height() + 10)
+    blit_text_to_screen(text_surface, text_rect)
+
+
 def new_text_surface(text: str, size: int = 12, color: pg.color.Color = black):
     default_font = (
         Path(__file__).parent / "assets" / "fonts" / "PressStart2P-Regular.ttf"
@@ -353,7 +392,8 @@ def main(filepath, resolution):
     show_bindings = {
         "on": False,
     }
-    show_bindings_obj = KeyBinding(pg.K_SPACE, "Help", lambda: set_show_bindings())
+
+    help_keybinding = KeyBinding(pg.K_SPACE, "Help", lambda: set_show_bindings())
 
     palette_colors = {
         "red": pg.Color(172, 50, 50),
@@ -457,7 +497,7 @@ def main(filepath, resolution):
         for i, (name, color) in enumerate(palette_colors.items(), start=1)
     ]
 
-    keybindings += [show_bindings_obj]
+    keybindings += [help_keybinding]
 
     while True:
         screen.fill(grey)
@@ -519,39 +559,9 @@ def main(filepath, resolution):
             cursor_rect.x, cursor_rect.y = previous_cursor_x, previous_cursor_y
 
         if show_bindings["on"]:
-            grouped_bindings = itertools.groupby(keybindings, lambda b: b.group)
-            keybindings_surface = pg.Surface(
-                (screen.get_width() // 2, screen.get_height() // 2)
-            )
-            keybindings_surface.fill(black)
-            keybindings_rect = keybindings_surface.get_rect()
-            keybindings_rect.x, keybindings_rect.y = rect_screen_center(
-                keybindings_rect, center_x=True, center_y=True
-            )
-
-            binding_text_position = pg.Rect((line_width + 10, 0), (0, 0))
-            for group, bindings in grouped_bindings:
-                text = f"{group}: {', '.join([pg.key.name(binding.keycode) for binding in bindings])}"
-                text_surface = new_text_surface(text, color=white)
-                binding_text_position.move_ip(0, text_surface.get_height() + 10)
-                keybindings_surface.blit(text_surface, binding_text_position)
-
-            pg.draw.rect(
-                keybindings_surface,
-                white,
-                pg.Rect((0, 0), (keybindings_rect.w, keybindings_rect.h)),
-                width=line_width,
-            )
-            screen.blit(keybindings_surface, keybindings_rect)
+            draw_keybindings(keybindings, line_width)
         else:
-            binding_text_position = rectangle_rect.move(0, (rectangle_rect.h + 20))
-            text = (
-                f"{show_bindings_obj.group}: {pg.key.name(show_bindings_obj.keycode)}"
-            )
-            text_surface = new_text_surface(text, color=white)
-            text_rect = rect_screen_center(binding_text_position, center_x=True)
-            binding_text_position.move_ip(0, text_surface.get_height() + 10)
-            blit_text_to_screen(text_surface, text_rect)
+            draw_help_keybind(help_keybinding, rectangle_rect)
 
         if color_selection["on"]:
             draw_color_selection(palette_colors, line_width)
