@@ -73,9 +73,7 @@ def draw_selected_color(
 
 def draw_color_selection(palette_colors: dict, line_width: int):
     screen = pg.display.get_surface()
-    palette_rect = pg.Rect(
-        (0, 0), (screen.get_width() // 2, screen.get_height() // 2)
-    )
+    palette_rect = pg.Rect((0, 0), (screen.get_width() // 2, screen.get_height() // 2))
     palette_surface = pg.Surface((palette_rect.w, palette_rect.h))
     palette_surface.fill(black)
 
@@ -186,7 +184,9 @@ def draw_rect_around_resized_img(
     return rectangle_rect
 
 
-def draw_cursor_coordinates(cursor_coords: Tuple[int, int], rectangle_top_left_coord: Tuple[int, int]) -> pg.Rect:
+def draw_cursor_coordinates(
+    cursor_coords: Tuple[int, int], rectangle_top_left_coord: Tuple[int, int]
+) -> pg.Rect:
     cursor_pixels_x, cursor_pixels_y = cursor_coords
     text = f"({cursor_pixels_x}, {cursor_pixels_y})"
     text_surface = new_text_surface(text, color=white)
@@ -229,9 +229,7 @@ def draw_keybindings(keybindings: Iterable[KeyBinding], line_width: int):
 
 def draw_help_keybind(help_binding: KeyBinding, rectangle_rect: pg.Rect):
     binding_text_position = rectangle_rect.move(0, (rectangle_rect.h + 20))
-    text = (
-        f"{help_binding.group}: {pg.key.name(help_binding.keycode)}"
-    )
+    text = f"{help_binding.group}: {pg.key.name(help_binding.keycode)}"
     text_surface = new_text_surface(text, color=white)
     text_rect = rect_screen_center(binding_text_position, center_x=True)
     binding_text_position.move_ip(0, text_surface.get_height() + 10)
@@ -372,7 +370,9 @@ class PyPixelArt:
             "on": False,
         }
 
-        self.help_keybinding = KeyBinding(pg.K_SPACE, "Help", lambda: self.set_show_bindings())
+        self.help_keybinding = KeyBinding(
+            pg.K_SPACE, "Help", lambda: self.set_show_bindings()
+        )
 
         self.palette_colors = {
             "red": pg.Color(172, 50, 50),
@@ -394,7 +394,9 @@ class PyPixelArt:
             KeyBinding(pg.K_u, "Undo", lambda: self.undo(), on_pressed=True),
             KeyBinding(pg.K_w, "Save file", lambda: self.save()),
             KeyBinding(pg.K_n, zoom_g, lambda: self.change_zoom(True), on_pressed=True),
-            KeyBinding(pg.K_b, zoom_g, lambda: self.change_zoom(False), on_pressed=True),
+            KeyBinding(
+                pg.K_b, zoom_g, lambda: self.change_zoom(False), on_pressed=True
+            ),
             KeyBinding(pg.K_k, cursor_g, lambda: self.move_cursor(0, -1)),
             KeyBinding(pg.K_j, cursor_g, lambda: self.move_cursor(0, 1)),
             KeyBinding(pg.K_l, cursor_g, lambda: self.move_cursor(1, 0)),
@@ -446,8 +448,12 @@ class PyPixelArt:
     def cursor_coords_in_pixels(self) -> Tuple[int, int]:
         if not all((self.cursor_rect, self.last_resized_img_rect)):
             return 0, 0
-        coord_x = (self.cursor_rect.x - self.last_resized_img_rect.x) // self.cursor_rect.w
-        coord_y = (self.cursor_rect.y - self.last_resized_img_rect.y) // self.cursor_rect.h
+        coord_x = (
+            self.cursor_rect.x - self.last_resized_img_rect.x
+        ) // self.cursor_rect.w
+        coord_y = (
+            self.cursor_rect.y - self.last_resized_img_rect.y
+        ) // self.cursor_rect.h
         return coord_x, coord_y
 
     def draw_pixel(self):
@@ -492,7 +498,9 @@ class PyPixelArt:
             )
 
             self.last_resized_img_rect = self.resized_img_rect
-            self.resized_img, self.resized_img_rect = draw_resized_image(self.image, self.zoom["percent"])
+            self.resized_img, self.resized_img_rect = draw_resized_image(
+                self.image, self.zoom["percent"]
+            )
 
             self.rectangle_rect = draw_rect_around_resized_img(
                 self.resized_img, self.resized_img_rect, self.line_width
@@ -516,15 +524,23 @@ class PyPixelArt:
 
             draw_symmetry_line(
                 self.symmetry["status"],
-                self.resized_img.get_rect().move((self.resized_img_rect.x, self.resized_img_rect.y)),
+                self.resized_img.get_rect().move(
+                    (self.resized_img_rect.x, self.resized_img_rect.y)
+                ),
                 self.symmetry_line_width,
             )
 
             cursor_image_color = black if self.grid["on"] else white
-            pg.draw.rect(self.screen, cursor_image_color, self.cursor_rect, width=self.cursor_line_width)
+            pg.draw.rect(
+                self.screen,
+                cursor_image_color,
+                self.cursor_rect,
+                width=self.cursor_line_width,
+            )
 
-            cursor_coords_text_rect = draw_cursor_coordinates(self.cursor_coords_in_pixels(),
-                                                              self.rectangle_rect.topleft)
+            cursor_coords_text_rect = draw_cursor_coordinates(
+                self.cursor_coords_in_pixels(), self.rectangle_rect.topleft
+            )
 
             rect_top_right_corner_x, _ = self.rectangle_rect.topright
             draw_selected_color(
@@ -533,12 +549,18 @@ class PyPixelArt:
                 cursor_coord_text_y=cursor_coords_text_rect.y,
             )
 
-            previous_cursor_x, previous_cursor_y = self.cursor_rect.x, self.cursor_rect.y
+            previous_cursor_x, previous_cursor_y = (
+                self.cursor_rect.x,
+                self.cursor_rect.y,
+            )
 
             handle_input(self.keybindings)
 
             if not self.resized_img_rect.colliderect(self.cursor_rect):
-                self.cursor_rect.x, self.cursor_rect.y = previous_cursor_x, previous_cursor_y
+                self.cursor_rect.x, self.cursor_rect.y = (
+                    previous_cursor_x,
+                    previous_cursor_y,
+                )
 
             if self.show_bindings["on"]:
                 draw_keybindings(self.keybindings, self.line_width)
