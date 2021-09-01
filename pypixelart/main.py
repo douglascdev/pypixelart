@@ -462,7 +462,6 @@ def main(filepath, resolution):
     while True:
         screen.fill(grey)
 
-        # Draws header text
         draw_header_text(
             app_name=app_name,
             path_name=path.name,
@@ -471,16 +470,13 @@ def main(filepath, resolution):
             zoom=zoom["percent"],
         )
 
-        # Draws the selected image
         last_resized_img_rect = resized_img_rect
         resized_img, resized_img_rect = draw_resized_image(image, zoom["percent"])
 
-        # Draws the rectangle around the image
         rectangle_rect = draw_rect_around_resized_img(
             resized_img, resized_img_rect, line_width
         )
 
-        # Initializes cursor values
         update_cursor_pos(
             resized_img_rect=resized_img_rect,
             last_resized_img_rect=last_resized_img_rect,
@@ -490,7 +486,6 @@ def main(filepath, resolution):
             cursor_coords=cursor_coords_in_pixels(),
         )
 
-        # Draws a grid of rectangles around each pixel
         if grid["on"]:
             where = resized_img.get_rect().move(
                 (resized_img_rect.x, resized_img_rect.y)
@@ -498,21 +493,17 @@ def main(filepath, resolution):
             grid_rect_size = cursor_rect.w, cursor_rect.h
             draw_grid(where, grid_rect_size, grid_line_width)
 
-        # Draws a line indicating where symmetry starts
         draw_symmetry_line(
             symmetry["status"],
             resized_img.get_rect().move((resized_img_rect.x, resized_img_rect.y)),
             symmetry_line_width,
         )
 
-        # Draws the rectangle that corresponds to the cursor
         cursor_image_color = black if grid["on"] else white
         pg.draw.rect(screen, cursor_image_color, cursor_rect, width=cursor_line_width)
 
-        # Draws cursor coordinates above the rectangle
         cursor_coords_text_rect = draw_cursor_coordinates(cursor_coords_in_pixels(), rectangle_rect.topleft)
 
-        # Draws selected color
         rect_top_right_corner_x, _ = rectangle_rect.topright
         draw_selected_color(
             cursor_draw_color["color"],
@@ -520,18 +511,13 @@ def main(filepath, resolution):
             cursor_coord_text_y=cursor_coords_text_rect.y,
         )
 
-        cursor_rect_backup = cursor_rect.x, cursor_rect.y
+        previous_cursor_x, previous_cursor_y = cursor_rect.x, cursor_rect.y
 
         handle_input(keybindings)
 
-        # Restore position from before input if the cursor is outside the rectangle
-        img_rect_pos = resized_img.get_rect().move(
-            (resized_img_rect.x, resized_img_rect.y)
-        )
-        if not img_rect_pos.colliderect(cursor_rect):
-            cursor_rect.x, cursor_rect.y = cursor_rect_backup
+        if not resized_img_rect.colliderect(cursor_rect):
+            cursor_rect.x, cursor_rect.y = previous_cursor_x, previous_cursor_y
 
-        # Draws keybindings on screen
         if show_bindings["on"]:
             grouped_bindings = itertools.groupby(keybindings, lambda b: b.group)
             keybindings_surface = pg.Surface(
@@ -567,7 +553,6 @@ def main(filepath, resolution):
             binding_text_position.move_ip(0, text_surface.get_height() + 10)
             blit_text_to_screen(text_surface, text_rect)
 
-        # Color selection
         if color_selection["on"]:
             draw_color_selection(palette_colors, line_width)
 
