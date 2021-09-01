@@ -75,6 +75,21 @@ def draw_symmetry_line(sym_type: SymmetryType, rect: pg.Rect, line_width: int):
     )
 
 
+def draw_grid(where: pg.Rect, size: Tuple[int, int], line_width: int):
+    rectangles_w, rectangles_h = size
+    for i, j in (
+        (i, j)
+        for i in range(where.x, where.x + where.w, rectangles_w)
+        for j in range(where.y, where.y + where.h, rectangles_h)
+    ):
+        pg.draw.rect(
+            pg.display.get_surface(),
+            white,
+            pg.Rect((i, j), (rectangles_w, rectangles_h)),
+            width=line_width,
+        )
+
+
 def rect_screen_center(
     rect: pg.Rect, center_x=False, center_y=False
 ) -> Tuple[int, int]:
@@ -333,22 +348,9 @@ def main(filepath, resolution):
 
         # Draws a grid of rectangles around each pixel
         if grid["on"]:
-            for i in range(
-                img_screen_pos[0],
-                img_screen_pos[0] + resized_img.get_width(),
-                cursor_rect.w,
-            ):
-                for j in range(
-                    img_screen_pos[1],
-                    img_screen_pos[1] + resized_img.get_height(),
-                    cursor_rect.h,
-                ):
-                    pg.draw.rect(
-                        screen,
-                        white,
-                        pg.Rect((i, j), (cursor_rect.w, cursor_rect.h)),
-                        width=grid_line_width,
-                    )
+            where = resized_img.get_rect().move(img_screen_pos)
+            grid_rect_size = cursor_rect.w, cursor_rect.h
+            draw_grid(where, grid_rect_size, grid_line_width)
 
         # Draws a line indicating where symmetry starts
         draw_symmetry_line(
