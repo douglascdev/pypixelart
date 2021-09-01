@@ -361,7 +361,7 @@ def main(filepath, resolution):
         # Initializes cursor values
         window_resized = last_img_screen_pos and last_img_screen_pos != img_screen_pos
         if (cursor_rect.x, cursor_rect.y) == (0, 0):
-            cursor_rect.x, cursor_rect.y = img_screen_pos[0], img_screen_pos[1]
+            cursor_rect.x, cursor_rect.y = img_screen_pos
             cursor_rect.w, cursor_rect.h = (
                 resized_img.get_width() // image.get_width(),
                 resized_img.get_height() // image.get_height(),
