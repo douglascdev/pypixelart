@@ -60,7 +60,7 @@ class PyPixelArt:
         self.keybindings = [
             KeyBinding(pg.K_i, "Draw", lambda: self.draw_pixel(), on_pressed=True),
             KeyBinding(pg.K_x, "Erase", lambda: self.erase_pixel(), on_pressed=True),
-            KeyBinding(pg.K_u, "Undo", lambda: self.undo(), on_pressed=True),
+            KeyBinding(pg.K_u, "Undo", lambda: self.undo()),
             KeyBinding(pg.K_w, "Save file", lambda: self.save()),
             KeyBinding(pg.K_n, zoom_g, lambda: self.change_zoom(True), on_pressed=True),
             KeyBinding(
@@ -127,6 +127,10 @@ class PyPixelArt:
 
     def draw_pixel(self):
         cursor_x, cursor_y = self.cursor_coords_in_pixels()
+
+        if self.image.get_at((cursor_x, cursor_y)) == self.cursor_draw_color:
+            return
+
         self.image_history.append(self.image.copy())
         self.image.set_at((cursor_x, cursor_y), self.cursor_draw_color)
 
@@ -145,6 +149,10 @@ class PyPixelArt:
 
     def erase_pixel(self):
         cursor_x, cursor_y = self.cursor_coords_in_pixels()
+
+        if self.image.get_at((cursor_x, cursor_y)) == self.cursor_draw_color:
+            return
+
         self.image_history.append(self.image.copy())
         self.image.set_at((cursor_x, cursor_y), pg.Color(0, 0, 0, 0))
 

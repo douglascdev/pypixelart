@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Union, Iterable, Tuple
 
 from pypixelart.constants import *
-from pypixelart.types import *
+from pypixelart.classes import *
 
 import pygame as pg
 
