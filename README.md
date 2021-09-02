@@ -1,4 +1,4 @@
-# PyPixelArt
+# PyPixelArt - A keyboard-centered pixel editor
 
 ![pypixelart-compressed](https://user-images.githubusercontent.com/38195951/131579379-96c7e154-b8d4-4800-863e-4f1d541d1764.gif)
 

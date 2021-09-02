@@ -150,16 +150,16 @@ class PyPixelArt:
     def erase_pixel(self):
         cursor_x, cursor_y = self.cursor_coords_in_pixels()
 
-        if self.image.get_at((cursor_x, cursor_y)) == self.cursor_draw_color:
+        if self.image.get_at((cursor_x, cursor_y)) == alpha:
             return
 
         self.image_history.append(self.image.copy())
-        self.image.set_at((cursor_x, cursor_y), pg.Color(0, 0, 0, 0))
+        self.image.set_at((cursor_x, cursor_y), alpha)
 
     def undo(self):
         if self.image_history:
             saved_img: pg.Surface = self.image_history.pop()
-            self.image.fill((0, 0, 0, 0))
+            self.image.fill(alpha)
             self.image.blit(saved_img, (0, 0), saved_img.get_rect())
 
     def save(self):
@@ -261,7 +261,7 @@ def print_welcome_msg(func):
     def wrapper():
         click.clear()
         click.echo(
-            click.style("pypixelart - A TOTALLY PRACTICAL IMAGE EDITOR", fg="red")
+            click.style("PyPixelArt - A keyboard-centered pixel editor", fg="red")
         )
         func()
 
@@ -269,7 +269,7 @@ def print_welcome_msg(func):
 
 
 @print_welcome_msg
-@click.command(name="pypixelart")
+@click.command(name="PyPixelArt")
 @click.option(
     "--filepath",
     "-f",
