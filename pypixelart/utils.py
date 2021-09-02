@@ -40,7 +40,7 @@ def draw_selected_color(
     pg.display.get_surface().blit(
         selected_color_surface,
         (
-            rect_top_right_corner_x - w,
+            rect_top_right_corner_x - w - h,
             cursor_coord_text_y,
         ),
     )
