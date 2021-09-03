@@ -7,29 +7,18 @@ The idea behind PyPixelArt is uniting:
  - [vim](https://github.com/vim/vim) 's keyboard-centered approach to improve productivity. Pretty hard to do with an image editor, but we'll try.
  - Some very useful functionalities from [aseprite](https://github.com/aseprite/aseprite) and other pixel art editors, such as screen symmetry.
 
-## Features
-PyPixelArt has many exciting functionalities, including
-- Editing pixels *one at a time*!
-- Saving images!
-- An undo function!
-- Vim keybindings by default!
-- A grid!
-
-![grid](https://user-images.githubusercontent.com/38195951/131271151-3093ee75-ef13-4c6c-9391-73519b19b572.gif)
-
-- Vertical and horizontal symmetry to draw the same pixel in two sides!
-
-![symmetry](https://user-images.githubusercontent.com/38195951/131271153-93a452fa-ca09-4a43-b62f-decb9c8d9899.gif)
-
-- Zoom !
-
-![zoom](https://user-images.githubusercontent.com/38195951/131271152-319d9213-5753-49b2-a5c5-241e39153c02.gif)
-
-
-To do:
-- A fill tool!
-- Cool image filters!
-- Color palette presets
+## Features and keybindings
+- **Draw** : i
+- **Erase**: x
+- **Undo**: u
+- **Save**: w
+- **Zoom**: n, b
+- **Move Cursor**: k, j, l, h
+- **Grid**: g
+- **Symmetry**: s
+- **Color selection**: c
+- **Color**: 1, 2, 3, 4, 5, 6
+- **Help**: Space
 
 ## Installation
 
@@ -60,3 +49,10 @@ Options:
                            used.
   --help                   Show this message and exit.
 ```
+
+## To do
+- A fill tool
+- Cool image filters
+- Color palette presets
+- A better way to switch between colors
+- Allow editing colors on the color selection
