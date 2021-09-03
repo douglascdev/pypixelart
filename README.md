@@ -51,6 +51,8 @@ Options:
 ```
 
 ## To do
+- Add logging
+- Add unit testing
 - A fill tool
 - Cool image filters
 - Color palette presets
