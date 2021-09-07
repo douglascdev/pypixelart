@@ -4,7 +4,7 @@
 
 The idea behind PyPixelArt is uniting:
  - a [cmdpxl](https://github.com/knosmos/cmdpxl) inspired pixel image editor applied to pixel art.
- - [vim](https://github.com/vim/vim) 's keyboard-centered approach to improve productivity. Pretty hard to do with an image editor, but we'll try.
+ - [vim](https://github.com/vim/vim) 's keyboard-centered approach to improve productivity. Pretty hard to do with an image editor, but it'll be fun to try xD
  - Some very useful functionalities from [aseprite](https://github.com/aseprite/aseprite) and other pixel art editors, such as screen symmetry.
 
 ## Features and keybindings
@@ -50,11 +50,11 @@ Options:
   --help                   Show this message and exit.
 ```
 
-## To do
-- Add logging
-- Add unit testing
-- A fill tool
-- Cool image filters
-- Color palette presets
-- A better way to switch between colors
-- Allow editing colors on the color selection
+## Contribute!
+
+Any contributions and forks and welcomed and encouraged!
+
+Here's how you can contribute:
+ - Fork the repository
+ - Mess around with the code and use [black](https://pypi.org/project/black/) to format it
+ - Submit a [Pull Request](https://github.com/douglascdev/pypixelart/pulls).
