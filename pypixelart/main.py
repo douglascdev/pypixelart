@@ -289,11 +289,13 @@ def main(filepath, resolution):
     if path.exists() and path.is_file():
         image = pg.image.load(path)
     else:
-        img_size = list(
-            map(int, resolution.split(","))
-            if resolution
-            else map(int, (input(f"Image {x}: ") for x in ("width", "height")))
-        )
+        if resolution:
+            img_size = tuple(map(int, resolution.split(",")))
+        else:
+            width = int(input("Image width: "))
+            height = int(input("Image height: "))
+            img_size = width, height
+
         image = pg.Surface(img_size, pygame.SRCALPHA)
 
     pypixelart = PyPixelArt(image, path)
