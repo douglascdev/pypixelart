@@ -19,7 +19,7 @@ def blit_text_to_screen(
 def draw_selected_color(
     color: pg.Color, rect_top_right_corner_x: int, cursor_coord_text_y: int
 ):
-    selected_color_text = new_text_surface("Color: ", color=white)
+    selected_color_text = new_text_surface("Color: ", color=WHITE)
     w, h = selected_color_text.get_width(), selected_color_text.get_height()
     selected_color_surface = pg.Surface(
         (
@@ -50,7 +50,7 @@ def draw_color_selection(palette_colors: dict, line_width: int):
     screen = pg.display.get_surface()
     palette_rect = pg.Rect((0, 0), (screen.get_width() // 2, screen.get_height() // 2))
     palette_surface = pg.Surface((palette_rect.w, palette_rect.h))
-    palette_surface.fill(black)
+    palette_surface.fill(BLACK)
 
     for i, name_color in enumerate(palette_colors.items(), start=1):
         name, color = name_color
@@ -67,7 +67,7 @@ def draw_color_selection(palette_colors: dict, line_width: int):
         color_surface.blit(color_binding_text, (center_x, center_y))
         palette_surface.blit(color_surface, ((i - 1) * color_surface_rect.w, 0))
 
-    pg.draw.rect(palette_surface, white, palette_rect, width=line_width)
+    pg.draw.rect(palette_surface, WHITE, palette_rect, width=line_width)
     palette_rect.x, palette_rect.y = rect_screen_center(
         palette_rect, center_x=True, center_y=True
     )
@@ -75,7 +75,7 @@ def draw_color_selection(palette_colors: dict, line_width: int):
 
     # Draws color selection title
     palette_mid_top_x, palette_mid_top_y = palette_rect.midtop
-    selection_title_surface = new_text_surface("Color selection", color=white)
+    selection_title_surface = new_text_surface("Color selection", color=WHITE)
     selection_title_pos = (
         palette_mid_top_x - selection_title_surface.get_width() // 2,
         palette_mid_top_y - 20,
@@ -111,7 +111,7 @@ def draw_symmetry_line(sym_type: SymmetryType, rect: pg.Rect, line_width: int):
 
     pg.draw.line(
         pg.display.get_surface(),
-        black,
+        BLACK,
         (start_x, start_y),
         (end_x, end_y),
         width=line_width,
@@ -127,7 +127,7 @@ def draw_grid(where: pg.Rect, size: Tuple[int, int], line_width: int):
     ):
         pg.draw.rect(
             pg.display.get_surface(),
-            white,
+            WHITE,
             pg.Rect((i, j), (rectangles_w, rectangles_h)),
             width=line_width,
         )
@@ -138,7 +138,7 @@ def draw_header_text(**kwargs):
         kwargs.get(arg) for arg in ("app_name", "path_name", "width", "height", "zoom")
     )
     header_text = f"{app_name}: {path_name} ({width}x{height}) {zoom}%"
-    text_surface = new_text_surface(header_text, color=red)
+    text_surface = new_text_surface(header_text, color=RED)
     text_rect = rect_screen_center(text_surface.get_rect().move(0, 10), center_x=True)
     blit_text_to_screen(text_surface, text_rect)
 
@@ -155,7 +155,7 @@ def draw_rect_around_resized_img(
         resized_img.get_rect().h + line_width,
     )
     rectangle_rect = pg.Rect((rectangle_x, rectangle_y), (rectangle_w, rectangle_h))
-    pg.draw.rect(pg.display.get_surface(), white, rectangle_rect, width=line_width)
+    pg.draw.rect(pg.display.get_surface(), WHITE, rectangle_rect, width=line_width)
     return rectangle_rect
 
 
@@ -164,7 +164,7 @@ def draw_cursor_coordinates(
 ) -> pg.Rect:
     cursor_pixels_x, cursor_pixels_y = cursor_coords
     text = f"({cursor_pixels_x}, {cursor_pixels_y})"
-    text_surface = new_text_surface(text, color=white)
+    text_surface = new_text_surface(text, color=WHITE)
     cursor_coords_text_rect = pg.Rect(
         rectangle_top_left_coord,
         (text_surface.get_width(), text_surface.get_height()),
@@ -180,7 +180,7 @@ def draw_keybindings(keybindings: Iterable[KeyBinding], line_width: int):
     keybindings_surface = pg.Surface(
         (screen.get_width() // 2, screen.get_height() // 2)
     )
-    keybindings_surface.fill(black)
+    keybindings_surface.fill(BLACK)
     keybindings_rect = keybindings_surface.get_rect()
     keybindings_rect.x, keybindings_rect.y = rect_screen_center(
         keybindings_rect, center_x=True, center_y=True
@@ -189,13 +189,13 @@ def draw_keybindings(keybindings: Iterable[KeyBinding], line_width: int):
     binding_text_position = pg.Rect((line_width + 10, 0), (0, 0))
     for group, bindings in grouped_bindings:
         text = f"{group}: {', '.join([pg.key.name(binding.keycode) for binding in bindings])}"
-        text_surface = new_text_surface(text, color=white)
+        text_surface = new_text_surface(text, color=WHITE)
         binding_text_position.move_ip(0, text_surface.get_height() + 10)
         keybindings_surface.blit(text_surface, binding_text_position)
 
     pg.draw.rect(
         keybindings_surface,
-        white,
+        WHITE,
         pg.Rect((0, 0), (keybindings_rect.w, keybindings_rect.h)),
         width=line_width,
     )
@@ -205,13 +205,13 @@ def draw_keybindings(keybindings: Iterable[KeyBinding], line_width: int):
 def draw_help_keybind(help_binding: KeyBinding, rectangle_rect: pg.Rect):
     binding_text_position = rectangle_rect.move(0, (rectangle_rect.h + 20))
     text = f"{help_binding.group}: {pg.key.name(help_binding.keycode)}"
-    text_surface = new_text_surface(text, color=white)
+    text_surface = new_text_surface(text, color=WHITE)
     text_rect = rect_screen_center(binding_text_position, center_x=True)
     binding_text_position.move_ip(0, text_surface.get_height() + 10)
     blit_text_to_screen(text_surface, text_rect)
 
 
-def new_text_surface(text: str, size: int = 12, color: pg.color.Color = black):
+def new_text_surface(text: str, size: int = 12, color: pg.color.Color = BLACK):
     default_font = (
         Path(__file__).parent / "assets" / "fonts" / "PressStart2P-Regular.ttf"
     ).resolve()

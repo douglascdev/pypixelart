@@ -16,7 +16,7 @@ class PyPixelArt:
         pg.display.set_caption(self.app_name)
 
         self.cursor_rect = pg.Rect((0, 0), (0, 0))
-        self.cursor_draw_color = white
+        self.cursor_draw_color = WHITE
 
         self.resized_img_rect = self.last_resized_img_rect = None
 
@@ -150,16 +150,16 @@ class PyPixelArt:
     def erase_pixel(self):
         cursor_x, cursor_y = self.cursor_coords_in_pixels()
 
-        if self.image.get_at((cursor_x, cursor_y)) == alpha:
+        if self.image.get_at((cursor_x, cursor_y)) == ALPHA:
             return
 
         self.image_history.append(self.image.copy())
-        self.image.set_at((cursor_x, cursor_y), alpha)
+        self.image.set_at((cursor_x, cursor_y), ALPHA)
 
     def undo(self):
         if self.image_history:
             saved_img: pg.Surface = self.image_history.pop()
-            self.image.fill(alpha)
+            self.image.fill(ALPHA)
             self.image.blit(saved_img, (0, 0), saved_img.get_rect())
 
     def save(self):
@@ -169,7 +169,7 @@ class PyPixelArt:
     def run_loop(self):
 
         while True:
-            self.screen.fill(grey)
+            self.screen.fill(GREY)
 
             draw_header_text(
                 app_name=self.app_name,
@@ -212,7 +212,7 @@ class PyPixelArt:
                 self.symmetry_line_width,
             )
 
-            cursor_image_color = black if self.grid else white
+            cursor_image_color = BLACK if self.grid else WHITE
             pg.draw.rect(
                 self.screen,
                 cursor_image_color,
