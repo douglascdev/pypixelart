@@ -25,8 +25,9 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
     ],
-    description="A keyboard-centered approach to pixel art",
+    description="A keyboard-centric approach to pixel art",
     entry_points={
         "console_scripts": [
             "pypixelart=pypixelart.main:main",

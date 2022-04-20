@@ -1,2 +1,2 @@
-click==8.0.1
-pygame==2.0.1
+click==8.1.2
+pygame==2.1.1
