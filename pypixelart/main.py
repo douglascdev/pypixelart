@@ -258,6 +258,10 @@ class PyPixelArt:
 
 
 def print_welcome_msg(func):
+    """
+    Print a welcome message. Uses a decorator to ensure it executes before click and therefore always shows the message
+    """
+
     def wrapper():
         click.clear()
         click.echo(
