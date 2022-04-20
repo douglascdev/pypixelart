@@ -1,10 +1,10 @@
 import pathlib
+
 import click
-
-from pypixelart.utils import *
-
 import pygame as pg
 import pygame.font
+
+from pypixelart.utils import *
 
 
 class PyPixelArt:
