@@ -11,7 +11,8 @@ class PyPixelArt:
     def __init__(self, image: pg.Surface, path: pathlib.Path):
         self.image, self.path = image, path
 
-        self.screen = pg.display.set_mode((600, 600), pg.RESIZABLE)
+        window_width, window_height = 600, 600
+        self.screen = pg.display.set_mode((window_width, window_height), pg.RESIZABLE)
         self.app_name = click.get_current_context().command.name
         pg.display.set_caption(self.app_name)
 
@@ -29,9 +30,28 @@ class PyPixelArt:
 
         self.clock = pg.time.Clock()
 
+        """
+        Get the biggest image dimension and take the inverse rule of 
+        three between the corresponding window dimension, 100 and the 
+        image dimension to get the appropriate zoom that keeps the 
+        image in the screen
+        """
+        if image.get_width() > image.get_height():
+            initial_zoom_percent = (window_width * 100) // image.get_width()
+        else:
+            initial_zoom_percent = (window_height * 100) // image.get_height()
+
+        # Percent of zoom space that must be left for the rest of the UI
+        margin_percent = 20
+        # Remove margin_percent percent of the zoom value to leave room for the UI
+        initial_zoom_percent = (initial_zoom_percent * (100 - margin_percent)) // 100
+
+        step = initial_zoom_percent // 20  # Set the step to 5% of the zoom
+        step = 1 if step == 0 else step  # Set it to 1 if the result of the division above was 0
+
         self.zoom = {
-            "percent": 1000,
-            "step": 100,
+            "percent": initial_zoom_percent,
+            "step": step,
             "changed": False,
         }
 
