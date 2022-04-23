@@ -1,4 +1,5 @@
 import pathlib
+import logging
 
 import click
 import pygame as pg
@@ -9,6 +10,8 @@ from pypixelart.utils import *
 
 class PyPixelArt:
     def __init__(self, image: pg.Surface, path: pathlib.Path):
+        logging.info(f"Instantiating PyPixelArt with path {path}")
+
         self.image, self.path = image, path
 
         window_width, window_height = 600, 600
@@ -37,21 +40,35 @@ class PyPixelArt:
         image in the screen
         """
         if image.get_width() > image.get_height():
+            logging.debug(
+                f"Image width {image.get_width()} > image height {image.get_height()}"
+            )
             initial_zoom_percent = (window_width * 100) // image.get_width()
+            logging.debug(f"Zoom initialized to {initial_zoom_percent}")
         else:
+            logging.debug(
+                f"Image width {image.get_width()} <= image height {image.get_height()}"
+            )
             initial_zoom_percent = (window_height * 100) // image.get_height()
+            logging.debug(f"Zoom initialized to {initial_zoom_percent}")
 
         # Percent of zoom space that must be left for the rest of the UI
         margin_percent = 20
         # Remove margin_percent percent of the zoom value to leave room for the UI
         initial_zoom_percent = (initial_zoom_percent * (100 - margin_percent)) // 100
+        logging.debug(
+            f"Changed initial zoom to {initial_zoom_percent} after removing the margin of {margin_percent}%"
+        )
 
-        step = initial_zoom_percent // 20  # Set the step to 5% of the zoom
-        step = 1 if step == 0 else step  # Set it to 1 if the result of the division above was 0
+        # Set the step to 5% of the zoom
+        zoom_step_percent = initial_zoom_percent // 20
+        # Set it to 1 if the result of the division above was 0
+        zoom_step_percent = 1 if zoom_step_percent == 0 else zoom_step_percent
+        logging.debug(f"Zoom step initialized to {zoom_step_percent}")
 
         self.zoom = {
             "percent": initial_zoom_percent,
-            "step": step,
+            "step": zoom_step_percent,
             "changed": False,
         }
 
@@ -112,6 +129,7 @@ class PyPixelArt:
         if self.zoom["percent"] + to_add > 0:
             self.zoom["changed"] = True
             self.zoom["percent"] += to_add
+            logging.debug(f"Zoom changed to {self.zoom['percent']}")
 
     def move_cursor(self, x: int, y: int):
         """
@@ -122,38 +140,58 @@ class PyPixelArt:
         new_x = (self.cursor_position.x + x) % self.image.get_width()
         new_y = (self.cursor_position.y + y) % self.image.get_height()
         self.cursor_position.update(new_x, new_y)
+        logging.debug(f"Cursor position updated to ({new_x}, {new_y})")
 
     def set_grid(self):
         self.grid = not self.grid
+        logging.debug(f"Grid set to {self.grid}")
 
     def set_symmetry(self):
         self.symmetry = SymmetryType(
             (self.symmetry.value + 1) % len(list(SymmetryType))
         )
+        logging.debug(f"Symmetry set to {self.symmetry.name}")
 
     def set_color_selection(self):
         self.color_selection = not self.color_selection
+        logging.debug(f"Color selection set to {self.color_selection}")
 
     def set_show_bindings(self):
         self.show_bindings = not self.show_bindings
+        logging.debug(f"Show bindings set to {self.show_bindings}")
 
     def set_cursor_color(self, selected_color: pg.Color):
         self.color_selection = False
         self.cursor_draw_color = selected_color
+        logging.debug(f"Cursor color set to {self.cursor_position}")
 
     def draw_pixel(self):
         cursor_x, cursor_y = map(int, self.cursor_position)
 
         if self.image.get_at((cursor_x, cursor_y)) == self.cursor_draw_color:
+            logging.debug(
+                f"Tried to draw pixel at {(cursor_x, cursor_y)} but it has the same color {self.cursor_draw_color}, "
+                f"returning from draw_pixel"
+            )
             return
 
         self.image_history.append(self.image.copy())
         self.image.set_at((cursor_x, cursor_y), self.cursor_draw_color)
+        logging.debug(
+            f"Drew pixel at {(cursor_x, cursor_y)} with color {self.cursor_draw_color}"
+        )
+        logging.debug(
+            f"After the current pixel, image history has {len(self.image_history)} elements"
+        )
 
         if self.symmetry == SymmetryType.NoSymmetry:
+            logging.debug(f"No symmetry is set, returning from draw_pixel")
             return
 
         middle_w, middle_h = self.image.get_width() // 2, self.image.get_height() // 2
+        logging.debug(f"Grid symmetry middle width: {middle_w}")
+        logging.debug(f"Grid symmetry middle height: {middle_h}")
+
         if self.symmetry == SymmetryType.Vertical:
 
             cursor_x = middle_w + (middle_w - cursor_x) - 1
@@ -163,6 +201,10 @@ class PyPixelArt:
             cursor_y = middle_h + (middle_h - cursor_y) - 1
             self.image.set_at((cursor_x, cursor_y), self.cursor_draw_color)
 
+        logging.debug(
+            f"Drew {self.symmetry.name} symmetry pixel at {(cursor_x, cursor_y)} with color {self.cursor_draw_color}"
+        )
+
     def erase_pixel(self):
         cursor_x, cursor_y = self.cursor_position
 
@@ -171,6 +213,10 @@ class PyPixelArt:
 
         self.image_history.append(self.image.copy())
         self.image.set_at((cursor_x, cursor_y), ALPHA)
+        logging.debug(f"Erased pixel at {(cursor_x, cursor_y)}")
+        logging.debug(
+            f"After the current erase, image history has {len(self.image_history)} elements"
+        )
 
     def undo(self):
         if self.image_history:
@@ -183,6 +229,7 @@ class PyPixelArt:
         click.echo(f"Saved {self.path}")
 
     def run_loop(self):
+        logging.info("Running loop")
 
         while True:
             self.screen.fill(GREY)
@@ -207,14 +254,19 @@ class PyPixelArt:
             cursor_width = self.resized_img_rect.w / self.image.get_rect().w
             cursor_height = self.resized_img_rect.h / self.image.get_rect().h
             cursor_x, cursor_y = map(int, self.cursor_position)
-            cursor_rect_xy = (cursor_width * cursor_x + self.resized_img_rect.x, cursor_height * cursor_y + self.resized_img_rect.y)
-            cursor_rect = pg.Rect(cursor_rect_xy, (cursor_width, cursor_height)),
+            cursor_rect_xy = (
+                cursor_width * cursor_x + self.resized_img_rect.x,
+                cursor_height * cursor_y + self.resized_img_rect.y,
+            )
+            cursor_rect = (pg.Rect(cursor_rect_xy, (cursor_width, cursor_height)),)
 
             if self.grid:
                 where = self.resized_img.get_rect().move(
                     (self.resized_img_rect.x, self.resized_img_rect.y)
                 )
-                draw_grid(where, (int(cursor_width), int(cursor_height)), self.grid_line_width)
+                draw_grid(
+                    where, (int(cursor_width), int(cursor_height)), self.grid_line_width
+                )
 
             draw_symmetry_line(
                 self.symmetry,
@@ -287,19 +339,33 @@ def print_welcome_msg(func):
     "-res",
     help="Image height and width separated by a comma, e.g. 20,10 for a 20x10 image. Note that no spaces can be used.",
 )
-def main(filepath, resolution):
+@click.option(
+    "--debug",
+    is_flag=True,
+    default=False,
+    help="Print debug-level logging to standard output",
+)
+def main(filepath, resolution, debug):
+    logging.getLogger().setLevel(logging.DEBUG if debug else logging.WARNING)
+    logging.info(f"Called with arguments '{filepath}' and '{resolution}'")
+
     pg.init()
 
     path = Path(filepath)
     if path.exists() and path.is_file():
+        logging.info(f"Path '{path}' exists and is file. Now loading as image.")
         image = pg.image.load(path)
     else:
+        logging.info("No valid path was provided, creating new surface.")
+
         if resolution:
             img_size = tuple(map(int, resolution.split(",")))
+            logging.info(f"Resolution {img_size} loaded from click argument")
         else:
             width = int(input("Image width: "))
             height = int(input("Image height: "))
             img_size = width, height
+            logging.info(f"Resolution {img_size} loaded from input")
 
         image = pg.Surface(img_size, pygame.SRCALPHA)
 

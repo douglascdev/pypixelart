@@ -10,7 +10,9 @@ class SymmetryType(enum.IntEnum):
 
 
 class KeyBinding:
-    def __init__(self, keycode: int, group: str, func: typing.Callable, on_pressed=False):
+    def __init__(
+        self, keycode: int, group: str, func: typing.Callable, on_pressed=False
+    ):
         self.keycode = keycode
         self.group = group
         self.func = func
