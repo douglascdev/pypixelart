@@ -16,7 +16,7 @@ class PyPixelArt:
         self.app_name = click.get_current_context().command.name
         pg.display.set_caption(self.app_name)
 
-        self.cursor_rect = pg.Rect((0, 0), (0, 0))
+        self.cursor_position = pg.Vector2(0, 0)
         self.cursor_draw_color = WHITE
 
         self.resized_img_rect = self.last_resized_img_rect = None
@@ -114,7 +114,13 @@ class PyPixelArt:
             self.zoom["percent"] += to_add
 
     def move_cursor(self, x: int, y: int):
-        self.cursor_rect.move_ip(x * self.cursor_rect.w, y * self.cursor_rect.h)
+        """
+        Add x and y, get the absolute value to disallow going out of bounds to negative values, then
+        divide by width/height to avoid going out of bounds to values bigger than the grid
+        """
+        new_x = abs(self.cursor_position.x + x) % self.image.get_width()
+        new_y = abs(self.cursor_position.y + y) % self.image.get_height()
+        self.cursor_position.update(new_x, new_y)
 
     def set_grid(self):
         self.grid = not self.grid
@@ -134,19 +140,8 @@ class PyPixelArt:
         self.color_selection = False
         self.cursor_draw_color = selected_color
 
-    def cursor_coords_in_pixels(self) -> Tuple[int, int]:
-        if not all((self.cursor_rect, self.last_resized_img_rect)):
-            return 0, 0
-        coord_x = (
-            self.cursor_rect.x - self.last_resized_img_rect.x
-        ) // self.cursor_rect.w
-        coord_y = (
-            self.cursor_rect.y - self.last_resized_img_rect.y
-        ) // self.cursor_rect.h
-        return coord_x, coord_y
-
     def draw_pixel(self):
-        cursor_x, cursor_y = self.cursor_coords_in_pixels()
+        cursor_x, cursor_y = map(int, self.cursor_position)
 
         if self.image.get_at((cursor_x, cursor_y)) == self.cursor_draw_color:
             return
@@ -168,7 +163,7 @@ class PyPixelArt:
             self.image.set_at((cursor_x, cursor_y), self.cursor_draw_color)
 
     def erase_pixel(self):
-        cursor_x, cursor_y = self.cursor_coords_in_pixels()
+        cursor_x, cursor_y = self.cursor_position
 
         if self.image.get_at((cursor_x, cursor_y)) == ALPHA:
             return
@@ -208,21 +203,17 @@ class PyPixelArt:
                 self.resized_img, self.resized_img_rect, self.line_width
             )
 
-            update_cursor_pos(
-                resized_img_rect=self.resized_img_rect,
-                last_resized_img_rect=self.last_resized_img_rect,
-                original_image_rect=self.image.get_rect(),
-                cursor_rect=self.cursor_rect,
-                zoom=self.zoom,
-                cursor_coords=self.cursor_coords_in_pixels(),
-            )
+            cursor_width = self.resized_img_rect.w / self.image.get_rect().w
+            cursor_height = self.resized_img_rect.h / self.image.get_rect().h
+            cursor_x, cursor_y = map(int, self.cursor_position)
+            cursor_rect_xy = (cursor_width * cursor_x + self.resized_img_rect.x, cursor_height * cursor_y + self.resized_img_rect.y)
+            cursor_rect = pg.Rect(cursor_rect_xy, (cursor_width, cursor_height)),
 
             if self.grid:
                 where = self.resized_img.get_rect().move(
                     (self.resized_img_rect.x, self.resized_img_rect.y)
                 )
-                grid_rect_size = self.cursor_rect.w, self.cursor_rect.h
-                draw_grid(where, grid_rect_size, self.grid_line_width)
+                draw_grid(where, (int(cursor_width), int(cursor_height)), self.grid_line_width)
 
             draw_symmetry_line(
                 self.symmetry,
@@ -236,12 +227,12 @@ class PyPixelArt:
             pg.draw.rect(
                 self.screen,
                 cursor_image_color,
-                self.cursor_rect,
+                cursor_rect,
                 width=self.cursor_line_width,
             )
 
             cursor_coords_text_rect = draw_cursor_coordinates(
-                self.cursor_coords_in_pixels(), self.rectangle_rect.topleft
+                (cursor_x, cursor_y), self.rectangle_rect.topleft
             )
 
             rect_top_right_corner_x, _ = self.rectangle_rect.topright
@@ -251,18 +242,7 @@ class PyPixelArt:
                 cursor_coord_text_y=cursor_coords_text_rect.y,
             )
 
-            previous_cursor_x, previous_cursor_y = (
-                self.cursor_rect.x,
-                self.cursor_rect.y,
-            )
-
             handle_input(self.keybindings)
-
-            if not self.resized_img_rect.colliderect(self.cursor_rect):
-                self.cursor_rect.x, self.cursor_rect.y = (
-                    previous_cursor_x,
-                    previous_cursor_y,
-                )
 
             if self.show_bindings:
                 draw_keybindings(self.keybindings, self.line_width)
@@ -285,7 +265,7 @@ def print_welcome_msg(func):
     def wrapper():
         click.clear()
         click.echo(
-            click.style("PyPixelArt - A keyboard-centered pixel editor", fg="red")
+            click.style("PyPixelArt - A keyboard-centric pixel editor", fg="red")
         )
         func()
 
