@@ -40,6 +40,7 @@ To get the full list of options:
 
 ```
 $ pypixelart --help
+PyPixelArt - A keyboard-centric pixel editor
 Usage: pypixelart [OPTIONS]
 
 Options:
@@ -47,6 +48,7 @@ Options:
   -res, --resolution TEXT  Image height and width separated by a comma, e.g.
                            20,10 for a 20x10 image. Note that no spaces can be
                            used.
+  --debug                  Print debug-level logging to standard output
   --help                   Show this message and exit.
 ```
 
