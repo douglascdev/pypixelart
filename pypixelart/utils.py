@@ -4,9 +4,11 @@ from pathlib import Path
 from typing import Union, Iterable, Tuple
 
 from pypixelart.constants import *
-from pypixelart.classes import *
 
 import pygame as pg
+
+from pypixelart.keybinding import KeyBinding
+from pypixelart.symmetry_type import SymmetryType
 
 
 def blit_text_to_screen(
