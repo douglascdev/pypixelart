@@ -115,11 +115,12 @@ class PyPixelArt:
 
     def move_cursor(self, x: int, y: int):
         """
-        Add x and y, get the absolute value to disallow going out of bounds to negative values, then
-        divide by width/height to avoid going out of bounds to values bigger than the grid
+        Add x and y to existing coordinates and divide by width/height to avoid going out of grid.
+        When added x at the end, goes back to beginning. When subtracting at x=0, goes to the end.
+        Same applies for y.
         """
-        new_x = abs(self.cursor_position.x + x) % self.image.get_width()
-        new_y = abs(self.cursor_position.y + y) % self.image.get_height()
+        new_x = (self.cursor_position.x + x) % self.image.get_width()
+        new_y = (self.cursor_position.y + y) % self.image.get_height()
         self.cursor_position.update(new_x, new_y)
 
     def set_grid(self):
