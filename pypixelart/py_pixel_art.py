@@ -13,7 +13,7 @@ from pypixelart.constants import GREY, BLACK, WHITE, ALPHA
 
 class PyPixelArt:
     def __init__(self, image: pg.Surface, path: pathlib.Path):
-        logging.info(f"Instantiating PyPixelArt with path {path}")
+        logging.info(f"Instantiated PyPixelArt with path {path}")
 
         self.image, self.path = image, path
 

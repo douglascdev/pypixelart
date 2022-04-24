@@ -44,7 +44,8 @@ def print_welcome_msg(func):
     help="Print debug-level logging to standard output",
 )
 def main(filepath, resolution, debug):
-    logging.getLogger().setLevel(logging.DEBUG if debug else logging.WARNING)
+    level = logging.DEBUG if debug else logging.WARNING
+    logging.basicConfig(format="%(levelname)s:%(module)s:%(message)s", level=level)
     logging.info(f"Called with arguments '{filepath}' and '{resolution}'")
 
     pg.init()
