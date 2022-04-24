@@ -45,7 +45,7 @@ def print_welcome_msg(func):
 )
 def main(filepath, resolution, debug):
     level = logging.DEBUG if debug else logging.WARNING
-    logging.basicConfig(format="%(levelname)s:%(module)s:%(message)s", level=level)
+    logging.basicConfig(format="%(levelname)s:%(module)s:%(lineno)d:%(message)s", level=level)
     logging.info(f"Called with arguments '{filepath}' and '{resolution}'")
 
     pg.init()
