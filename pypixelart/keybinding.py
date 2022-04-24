@@ -1,3 +1,4 @@
+import logging
 import typing
 import pygame as pg
 
@@ -10,6 +11,7 @@ class KeyBinding:
         self.group = group
         self.func = func
         self.on_pressed = on_pressed
+        logging.debug(f"Keybinding created: {str(self)}")
 
     def __str__(self):
         return f"(keycode={pg.key.name(self.keycode)}, group={self.group})"
