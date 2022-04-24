@@ -133,17 +133,11 @@ def draw_symmetry_line(sym_type: SymmetryType, rect: pg.Rect, line_width: int):
 
 def draw_grid(where: pg.Rect, size: Tuple[int, int], line_width: int):
     rectangles_w, rectangles_h = size
-    for i, j in (
-        (i, j)
-        for i in range(where.x, where.x + where.w, rectangles_w)
-        for j in range(where.y, where.y + where.h, rectangles_h)
-    ):
-        pg.draw.rect(
-            pg.display.get_surface(),
-            WHITE,
-            pg.Rect((i, j), (rectangles_w, rectangles_h)),
-            width=line_width,
-        )
+    surface = pg.display.get_surface()
+    for i in range(where.y + rectangles_h, where.y + where.h, rectangles_h):
+        pg.draw.line(surface, WHITE, (where.x, i), (where.x + where.w - line_width, i))
+    for j in range(where.x + rectangles_w, where.x + where.w, rectangles_w):
+        pg.draw.line(surface, WHITE, (j, where.y), (j, where.y + where.h - line_width))
 
 
 def draw_header_text(**kwargs):
