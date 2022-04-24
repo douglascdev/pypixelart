@@ -60,7 +60,7 @@ class PyPixelArt:
         # Remove margin_percent percent of the zoom value to leave room for the UI
         initial_zoom_percent = (initial_zoom_percent * (100 - margin_percent)) // 100
         logging.debug(
-            f"Changed initial zoom to {initial_zoom_percent} after removing the margin of {margin_percent}%"
+            f"Changed initial zoom to {initial_zoom_percent} after removing the {margin_percent}% margin for the UI"
         )
 
         # Set the step to 5% of the zoom
