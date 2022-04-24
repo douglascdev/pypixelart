@@ -137,6 +137,9 @@ class PyPixelArt:
 
         self.keybindings += [self.help_keybinding]
 
+        binding_strings = "\n".join((f"\t{str(keybinding)}" for keybinding in self.keybindings))
+        logging.debug(f"Keybindings created: [\n{'' + binding_strings}\n]")
+
     def set_zoom(self, add_zoom: bool):
         to_add = self.zoom["step"] if add_zoom else -self.zoom["step"]
         if self.zoom["percent"] + to_add > 0:
