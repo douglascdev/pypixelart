@@ -1,7 +1,6 @@
 # PyPixelArt - A keyboard-centric pixel editor
 
 ![amogus_pixelart](https://user-images.githubusercontent.com/38195951/164997677-c68e59b1-714b-47e9-9f07-f01f689a5578.gif)
-![pypixelart-compressed](https://user-images.githubusercontent.com/38195951/131579379-96c7e154-b8d4-4800-863e-4f1d541d1764.gif)
 
 The idea behind PyPixelArt is uniting:
  - a [cmdpxl](https://github.com/knosmos/cmdpxl) inspired pixel image editor applied to pixel art.
