@@ -37,6 +37,7 @@ def draw_selected_color(
             selected_color_text.get_rect().topright,
             (h, h),
         ),
+        border_radius=DEFAULT_BORDER_RADIUS // 4,
     )
     pg.display.get_surface().blit(
         selected_color_surface,
@@ -61,14 +62,25 @@ def draw_color_selection(palette_colors: dict, line_width: int):
             color_surface_center_x,
             color_surface_center_y,
         ) = color_surface_rect.center
-        pg.draw.rect(color_surface, color, color_surface_rect)
+        pg.draw.rect(
+            color_surface,
+            color,
+            color_surface_rect,
+            border_radius=DEFAULT_BORDER_RADIUS,
+        )
         color_binding_text = new_text_surface(str(i), color=~color)
         center_x = color_surface_center_x - color_binding_text.get_width() // 2
         center_y = color_surface_center_y - color_binding_text.get_height() // 2
         color_surface.blit(color_binding_text, (center_x, center_y))
         palette_surface.blit(color_surface, ((i - 1) * color_surface_rect.w, 0))
 
-    pg.draw.rect(palette_surface, WHITE, palette_rect, width=line_width)
+    pg.draw.rect(
+        palette_surface,
+        WHITE,
+        palette_rect,
+        width=line_width,
+        border_radius=DEFAULT_BORDER_RADIUS,
+    )
     palette_rect.x, palette_rect.y = rect_screen_center(
         palette_rect, center_x=True, center_y=True
     )
@@ -156,7 +168,13 @@ def draw_rect_around_resized_img(
         resized_img.get_rect().h + line_width,
     )
     rectangle_rect = pg.Rect((rectangle_x, rectangle_y), (rectangle_w, rectangle_h))
-    pg.draw.rect(pg.display.get_surface(), WHITE, rectangle_rect, width=line_width)
+    pg.draw.rect(
+        pg.display.get_surface(),
+        WHITE,
+        rectangle_rect,
+        width=line_width,
+        border_radius=DEFAULT_BORDER_RADIUS,
+    )
     return rectangle_rect
 
 
@@ -179,12 +197,19 @@ def draw_keybindings(keybindings: Iterable[KeyBinding], line_width: int):
     screen = pg.display.get_surface()
     grouped_bindings = itertools.groupby(keybindings, lambda b: b.group)
     keybindings_surface = pg.Surface(
-        (screen.get_width() // 2, screen.get_height() // 2)
+        (screen.get_width() // 2, screen.get_height() // 2), pg.SRCALPHA
     )
-    keybindings_surface.fill(BLACK)
+
     keybindings_rect = keybindings_surface.get_rect()
     keybindings_rect.x, keybindings_rect.y = rect_screen_center(
         keybindings_rect, center_x=True, center_y=True
+    )
+
+    pg.draw.rect(
+        keybindings_surface,
+        BLACK,
+        pg.Rect((0, 0), (keybindings_rect.w, keybindings_rect.h)),
+        border_radius=DEFAULT_BORDER_RADIUS,
     )
 
     binding_text_position = pg.Rect((line_width + 10, 0), (0, 0))
@@ -199,6 +224,7 @@ def draw_keybindings(keybindings: Iterable[KeyBinding], line_width: int):
         WHITE,
         pg.Rect((0, 0), (keybindings_rect.w, keybindings_rect.h)),
         width=line_width,
+        border_radius=DEFAULT_BORDER_RADIUS,
     )
     screen.blit(keybindings_surface, keybindings_rect)
 

@@ -20,7 +20,14 @@ from pypixelart.utils import (
     draw_cursor_coordinates,
     handle_input,
 )
-from pypixelart.constants import GREY, BLACK, WHITE, ALPHA
+from pypixelart.constants import (
+    GREY,
+    BLACK,
+    WHITE,
+    ALPHA,
+    LIGHTER_GREY,
+    DEFAULT_BORDER_RADIUS,
+)
 
 
 class PyPixelArt:
@@ -256,6 +263,16 @@ class PyPixelArt:
             )
 
             self.last_resized_img_rect = self.resized_img_rect
+
+            # Sets a light grey color for the alpha background of the resized image
+            if self.resized_img_rect:
+                pg.draw.rect(
+                    pg.display.get_surface(),
+                    LIGHTER_GREY,
+                    self.resized_img_rect,
+                    border_radius=DEFAULT_BORDER_RADIUS,
+                )
+
             self.resized_img, self.resized_img_rect = draw_resized_image(
                 self.image, self.zoom["percent"]
             )
