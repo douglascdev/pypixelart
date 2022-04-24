@@ -219,7 +219,7 @@ class PyPixelArt:
         )
 
     def erase_pixel(self):
-        cursor_x, cursor_y = self.cursor_position
+        cursor_x, cursor_y = map(int, self.cursor_position)
 
         if self.image.get_at((cursor_x, cursor_y)) == ALPHA:
             return
