@@ -160,7 +160,7 @@ class PyPixelArt:
         new_x = (self.cursor_position.x + x) % self.image.get_width()
         new_y = (self.cursor_position.y + y) % self.image.get_height()
         self.cursor_position.update(new_x, new_y)
-        logging.debug(f"Cursor position updated to ({new_x}, {new_y})")
+        logging.debug(f"Cursor position updated to ({int(new_x)}, {int(new_y)})")
 
     def set_grid(self):
         self.grid = not self.grid
