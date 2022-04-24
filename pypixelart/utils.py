@@ -3,10 +3,9 @@ import sys
 from pathlib import Path
 from typing import Union, Iterable, Tuple
 
-from pypixelart.constants import *
-
 import pygame as pg
 
+from pypixelart.constants import *
 from pypixelart.keybinding import KeyBinding
 from pypixelart.symmetry_type import SymmetryType
 

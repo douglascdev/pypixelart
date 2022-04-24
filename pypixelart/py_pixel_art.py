@@ -7,7 +7,19 @@ import pygame as pg
 
 from pypixelart.keybinding import KeyBinding
 from pypixelart.symmetry_type import SymmetryType
-from pypixelart.utils import draw_keybindings, draw_grid, draw_help_keybind, draw_header_text, draw_resized_image, draw_rect_around_resized_img, draw_symmetry_line, draw_selected_color, draw_color_selection, draw_cursor_coordinates, handle_input
+from pypixelart.utils import (
+    draw_keybindings,
+    draw_grid,
+    draw_help_keybind,
+    draw_header_text,
+    draw_resized_image,
+    draw_rect_around_resized_img,
+    draw_symmetry_line,
+    draw_selected_color,
+    draw_color_selection,
+    draw_cursor_coordinates,
+    handle_input,
+)
 from pypixelart.constants import GREY, BLACK, WHITE, ALPHA
 
 
@@ -98,22 +110,20 @@ class PyPixelArt:
 
         zoom_g, cursor_g = "Zoom", "Move Cursor"
         self.keybindings = [
-            KeyBinding(pg.K_i, "Draw", lambda: self.draw_pixel(), on_pressed=True),
-            KeyBinding(pg.K_x, "Erase", lambda: self.erase_pixel(), on_pressed=True),
-            KeyBinding(pg.K_u, "Undo", lambda: self.undo()),
-            KeyBinding(pg.K_w, "Save file", lambda: self.save()),
-            KeyBinding(pg.K_n, zoom_g, lambda: self.change_zoom(True), on_pressed=True),
-            KeyBinding(
-                pg.K_b, zoom_g, lambda: self.change_zoom(False), on_pressed=True
-            ),
+            KeyBinding(pg.K_i, "Draw", self.draw_pixel, on_pressed=True),
+            KeyBinding(pg.K_x, "Erase", self.erase_pixel, on_pressed=True),
+            KeyBinding(pg.K_u, "Undo", self.undo),
+            KeyBinding(pg.K_w, "Save file", self.save),
+            KeyBinding(pg.K_n, zoom_g, lambda: self.set_zoom(True), on_pressed=True),
+            KeyBinding(pg.K_b, zoom_g, lambda: self.set_zoom(False), on_pressed=True),
             KeyBinding(pg.K_k, cursor_g, lambda: self.move_cursor(0, -1)),
             KeyBinding(pg.K_j, cursor_g, lambda: self.move_cursor(0, 1)),
             KeyBinding(pg.K_l, cursor_g, lambda: self.move_cursor(1, 0)),
             KeyBinding(pg.K_h, cursor_g, lambda: self.move_cursor(-1, 0)),
-            KeyBinding(pg.K_g, "Grid", lambda: self.set_grid()),
-            KeyBinding(pg.K_s, "Symmetry", lambda: self.set_symmetry()),
-            KeyBinding(pg.K_ESCAPE, "Exit", lambda: sys.exit()),
-            KeyBinding(pg.K_c, "Color selection", lambda: self.set_color_selection()),
+            KeyBinding(pg.K_g, "Grid", self.set_grid),
+            KeyBinding(pg.K_s, "Symmetry", self.set_symmetry),
+            KeyBinding(pg.K_ESCAPE, "Exit", sys.exit),
+            KeyBinding(pg.K_c, "Color selection", self.set_color_selection),
         ]
 
         self.keybindings += [
@@ -127,12 +137,12 @@ class PyPixelArt:
 
         self.keybindings += [self.help_keybinding]
 
-    def change_zoom(self, is_positive: bool):
-        to_add = self.zoom["step"] if is_positive else -self.zoom["step"]
+    def set_zoom(self, add_zoom: bool):
+        to_add = self.zoom["step"] if add_zoom else -self.zoom["step"]
         if self.zoom["percent"] + to_add > 0:
             self.zoom["changed"] = True
             self.zoom["percent"] += to_add
-            logging.debug(f"Zoom changed to {self.zoom['percent']}, by a value of {to_add}")
+            logging.debug(f"Zoom changed by {to_add} to {self.zoom['percent']}")
 
     def move_cursor(self, x: int, y: int):
         """
