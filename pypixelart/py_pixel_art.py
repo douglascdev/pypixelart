@@ -183,7 +183,7 @@ class PyPixelArt:
     def set_cursor_color(self, selected_color: pg.Color):
         self.color_selection = False
         self.cursor_draw_color = selected_color
-        logging.debug(f"Cursor color set to {self.cursor_position}")
+        logging.debug(f"Cursor color set to {selected_color}")
 
     def draw_pixel(self):
         cursor_x, cursor_y = map(int, self.cursor_position)
