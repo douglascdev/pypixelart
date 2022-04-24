@@ -95,10 +95,6 @@ class PyPixelArt:
 
         self.image_history = list()
 
-        self.help_keybinding = KeyBinding(
-            pg.K_SPACE, "Help", lambda: self.set_show_bindings()
-        )
-
         self.palette_colors = {
             "red": pg.Color(172, 50, 50),
             "cream": pg.Color(217, 160, 102),
@@ -107,6 +103,10 @@ class PyPixelArt:
             "blue": pg.Color(91, 110, 225),
             "yellow": pg.Color(251, 242, 54),
         }
+
+        self.help_keybinding = KeyBinding(
+            pg.K_SPACE, "Help", lambda: self.set_show_bindings()
+        )
 
         zoom_g, cursor_g = "Zoom", "Move Cursor"
         self.keybindings = [
