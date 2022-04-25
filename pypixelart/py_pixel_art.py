@@ -225,10 +225,13 @@ class PyPixelArt:
             f"Drew {self.symmetry.name} symmetry pixel at {(cursor_x, cursor_y)} with color {self.cursor_draw_color}"
         )
 
-    def erase_pixel(self):
+    def erase_pixel(self):        
         cursor_x, cursor_y = map(int, self.cursor_position)
 
         if self.image.get_at((cursor_x, cursor_y)) == ALPHA:
+            logging.debug(
+                f"Tried to erase pixel at {(cursor_x, cursor_y)} but it is already blank, returning from erase_pixel"
+                )
             return
 
         self.image_history.append(self.image.copy())
@@ -236,6 +239,27 @@ class PyPixelArt:
         logging.debug(f"Erased pixel at {(cursor_x, cursor_y)}")
         logging.debug(
             f"After the current erase, image history has {len(self.image_history)} elements"
+        )
+
+        if self.symmetry == SymmetryType.NoSymmetry:
+            logging.debug(f"No symmetry is set, returning from erase_pixel")
+            return
+
+        middle_w, middle_h = self.image.get_width() // 2, self.image.get_height() // 2
+        logging.debug(f"Grid symmetry middle width: {middle_w}")
+        logging.debug(f"Grid symmetry middle height: {middle_h}")
+
+        if self.symmetry == SymmetryType.Vertical:
+
+            cursor_x = middle_w + (middle_w - cursor_x) - 1
+            self.image.set_at((cursor_x, cursor_y), ALPHA)
+        elif self.symmetry == SymmetryType.Horizontal:
+
+            cursor_y = middle_h + (middle_h - cursor_y) - 1
+            self.image.set_at((cursor_x, cursor_y), ALPHA)
+
+        logging.debug(
+            f"Erased {self.symmetry.name} symmetry pixel at {(cursor_x, cursor_y)} with color {self.cursor_draw_color}"
         )
 
     def undo(self):
