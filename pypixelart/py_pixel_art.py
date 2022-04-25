@@ -225,13 +225,13 @@ class PyPixelArt:
             f"Drew {self.symmetry.name} symmetry pixel at {(cursor_x, cursor_y)} with color {self.cursor_draw_color}"
         )
 
-    def erase_pixel(self):        
+    def erase_pixel(self):
         cursor_x, cursor_y = map(int, self.cursor_position)
 
         if self.image.get_at((cursor_x, cursor_y)) == ALPHA:
             logging.debug(
                 f"Tried to erase pixel at {(cursor_x, cursor_y)} but it is already blank, returning from erase_pixel"
-                )
+            )
             return
 
         self.image_history.append(self.image.copy())
