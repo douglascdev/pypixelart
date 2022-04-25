@@ -188,7 +188,7 @@ class PyPixelArt:
     def draw_pixel(self):
         cursor_x, cursor_y = map(int, self.cursor_position)
 
-        if self.image.get_at((cursor_x, cursor_y)) == self.cursor_draw_color:
+        if self.image.get_at((cursor_x, cursor_y)) == self.cursor_draw_color and self.symmetry == SymmetryType.NoSymmetry:
             logging.debug(
                 f"Tried to draw pixel at {(cursor_x, cursor_y)} but it has the same color {self.cursor_draw_color}, "
                 f"returning from draw_pixel"
@@ -228,7 +228,7 @@ class PyPixelArt:
     def erase_pixel(self):
         cursor_x, cursor_y = map(int, self.cursor_position)
 
-        if self.image.get_at((cursor_x, cursor_y)) == ALPHA:
+        if self.image.get_at((cursor_x, cursor_y)) == ALPHA and self.symmetry == SymmetryType.NoSymmetry:
             logging.debug(
                 f"Tried to erase pixel at {(cursor_x, cursor_y)} but it is already blank, returning from erase_pixel"
             )
