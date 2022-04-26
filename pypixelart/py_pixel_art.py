@@ -191,12 +191,16 @@ class PyPixelArt:
 
     def draw_pixel(self):
         x, y = map(int, self.cursor_position)
-        draw_command = DrawPixelAtCursor(self.image, (x, y), self.cursor_draw_color, self.symmetry)
+        draw_command = DrawPixelAtCursor(
+            self.image, (x, y), self.cursor_draw_color, self.symmetry
+        )
         self.command_controller.execute(draw_command)
 
     def erase_pixel(self):
         x, y = map(int, self.cursor_position)
-        erase_command = ErasePixelAtCursor(self.image, (x, y), self.cursor_draw_color, self.symmetry)
+        erase_command = ErasePixelAtCursor(
+            self.image, (x, y), self.cursor_draw_color, self.symmetry
+        )
         self.command_controller.execute(erase_command)
 
     def undo(self):
