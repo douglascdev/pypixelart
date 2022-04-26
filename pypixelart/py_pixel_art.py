@@ -1,10 +1,13 @@
 import logging
 import pathlib
 import sys
+from typing import Iterable
 
 import click
 import pygame as pg
 
+from pypixelart.command.commands import DrawPixelAtCursor
+from pypixelart.command.controller import CommandController
 from pypixelart.keybinding import KeyBinding
 from pypixelart.symmetry_type import SymmetryType
 from pypixelart.utils import (
@@ -18,15 +21,14 @@ from pypixelart.utils import (
     draw_selected_color,
     draw_color_selection,
     draw_cursor_coordinates,
-    handle_input,
 )
 from pypixelart.constants import (
     GREY,
     BLACK,
     WHITE,
-    ALPHA,
     LIGHTER_GREY,
     DEFAULT_BORDER_RADIUS,
+    ALPHA,
 )
 
 
@@ -52,6 +54,7 @@ class PyPixelArt:
         self.cursor_line_width = self.line_width // 2
         self.grid_line_width = 1
         self.symmetry_line_width = 4
+        self.command_controller = CommandController()
 
         self.clock = pg.time.Clock()
 
@@ -100,8 +103,6 @@ class PyPixelArt:
 
         self.symmetry = SymmetryType.NoSymmetry
 
-        self.image_history = list()
-
         self.palette_colors = {
             "red": pg.Color(172, 50, 50),
             "cream": pg.Color(217, 160, 102),
@@ -117,9 +118,10 @@ class PyPixelArt:
 
         zoom_g, cursor_g = "Zoom", "Move Cursor"
         self.keybindings = [
-            KeyBinding(pg.K_i, "Draw", self.draw_pixel, on_pressed=True),
-            KeyBinding(pg.K_x, "Erase", self.erase_pixel, on_pressed=True),
+            KeyBinding(pg.K_i, "Draw", self.draw_pixel),
+            KeyBinding(pg.K_x, "Erase", self.erase_pixel),
             KeyBinding(pg.K_u, "Undo", self.undo),
+            KeyBinding(pg.K_r, "Redo", self.redo),
             KeyBinding(pg.K_w, "Save file", self.save),
             KeyBinding(pg.K_n, zoom_g, lambda: self.set_zoom(True), on_pressed=True),
             KeyBinding(pg.K_b, zoom_g, lambda: self.set_zoom(False), on_pressed=True),
@@ -186,97 +188,41 @@ class PyPixelArt:
         logging.debug(f"Cursor color set to {selected_color}")
 
     def draw_pixel(self):
-        cursor_x, cursor_y = map(int, self.cursor_position)
-
-        if (
-            self.image.get_at((cursor_x, cursor_y)) == self.cursor_draw_color
-            and self.symmetry == SymmetryType.NoSymmetry
-        ):
-            logging.debug(
-                f"Tried to draw pixel at {(cursor_x, cursor_y)} but it has the same color {self.cursor_draw_color}, "
-                f"returning from draw_pixel"
-            )
-            return
-
-        self.image_history.append(self.image.copy())
-        self.image.set_at((cursor_x, cursor_y), self.cursor_draw_color)
-        logging.debug(
-            f"Drew pixel at {(cursor_x, cursor_y)} with color {self.cursor_draw_color}"
+        x, y = map(int, self.cursor_position)
+        draw_command = DrawPixelAtCursor(
+            self.image, (x, y), self.cursor_draw_color, self.symmetry
         )
-        logging.debug(
-            f"After the current pixel, image history has {len(self.image_history)} elements"
-        )
-
-        if self.symmetry == SymmetryType.NoSymmetry:
-            logging.debug(f"No symmetry is set, returning from draw_pixel")
-            return
-
-        middle_w, middle_h = self.image.get_width() // 2, self.image.get_height() // 2
-        logging.debug(f"Grid symmetry middle width: {middle_w}")
-        logging.debug(f"Grid symmetry middle height: {middle_h}")
-
-        if self.symmetry == SymmetryType.Vertical:
-
-            cursor_x = middle_w + (middle_w - cursor_x) - 1
-            self.image.set_at((cursor_x, cursor_y), self.cursor_draw_color)
-        elif self.symmetry == SymmetryType.Horizontal:
-
-            cursor_y = middle_h + (middle_h - cursor_y) - 1
-            self.image.set_at((cursor_x, cursor_y), self.cursor_draw_color)
-
-        logging.debug(
-            f"Drew {self.symmetry.name} symmetry pixel at {(cursor_x, cursor_y)} with color {self.cursor_draw_color}"
-        )
+        self.command_controller.execute(draw_command)
 
     def erase_pixel(self):
-        cursor_x, cursor_y = map(int, self.cursor_position)
-
-        if (
-            self.image.get_at((cursor_x, cursor_y)) == ALPHA
-            and self.symmetry == SymmetryType.NoSymmetry
-        ):
-            logging.debug(
-                f"Tried to erase pixel at {(cursor_x, cursor_y)} but it is already blank, returning from erase_pixel"
-            )
-            return
-
-        self.image_history.append(self.image.copy())
-        self.image.set_at((cursor_x, cursor_y), ALPHA)
-        logging.debug(f"Erased pixel at {(cursor_x, cursor_y)}")
-        logging.debug(
-            f"After the current erase, image history has {len(self.image_history)} elements"
-        )
-
-        if self.symmetry == SymmetryType.NoSymmetry:
-            logging.debug(f"No symmetry is set, returning from erase_pixel")
-            return
-
-        middle_w, middle_h = self.image.get_width() // 2, self.image.get_height() // 2
-        logging.debug(f"Grid symmetry middle width: {middle_w}")
-        logging.debug(f"Grid symmetry middle height: {middle_h}")
-
-        if self.symmetry == SymmetryType.Vertical:
-
-            cursor_x = middle_w + (middle_w - cursor_x) - 1
-            self.image.set_at((cursor_x, cursor_y), ALPHA)
-        elif self.symmetry == SymmetryType.Horizontal:
-
-            cursor_y = middle_h + (middle_h - cursor_y) - 1
-            self.image.set_at((cursor_x, cursor_y), ALPHA)
-
-        logging.debug(
-            f"Erased {self.symmetry.name} symmetry pixel at {(cursor_x, cursor_y)} with color {self.cursor_draw_color}"
-        )
+        x, y = map(int, self.cursor_position)
+        erase_command = DrawPixelAtCursor(self.image, (x, y), ALPHA, self.symmetry)
+        self.command_controller.execute(erase_command)
 
     def undo(self):
-        if self.image_history:
-            saved_img: pg.Surface = self.image_history.pop()
-            self.image.fill(ALPHA)
-            self.image.blit(saved_img, (0, 0), saved_img.get_rect())
+        self.command_controller.undo()
+
+    def redo(self):
+        self.command_controller.redo()
 
     def save(self):
         pg.image.save(self.image, self.path)
         click.echo(f"Saved {self.path}")
+
+    def handle_input(self, keybindings: Iterable[KeyBinding]):
+        on_pressed_bindings = set(filter(lambda k: k.on_pressed, keybindings))
+        for binding in on_pressed_bindings:
+            if pg.key.get_pressed()[binding.keycode]:
+                binding.func()
+
+        not_on_pressed_keybindings = set(keybindings).difference(on_pressed_bindings)
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                sys.exit()
+
+            for binding in not_on_pressed_keybindings:
+                if event.type == pg.KEYDOWN and event.key == binding.keycode:
+                    binding.func()
 
     def run_loop(self):
         logging.info("Running loop")
@@ -355,7 +301,7 @@ class PyPixelArt:
                 cursor_coord_text_y=cursor_coords_text_rect.y,
             )
 
-            handle_input(self.keybindings)
+            self.handle_input(self.keybindings)
 
             if self.show_bindings:
                 draw_keybindings(self.keybindings, self.line_width)

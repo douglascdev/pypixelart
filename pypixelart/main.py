@@ -4,7 +4,7 @@ import click
 import pygame as pg
 import pygame.font
 
-from pypixelart.py_pixel_art import PyPixelArt
+from pypixelart import PyPixelArt
 from pypixelart.utils import *
 
 
