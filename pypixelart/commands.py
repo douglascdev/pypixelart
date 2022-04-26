@@ -18,7 +18,7 @@ class DrawPixelAtCursor(Command):
     symmetry_type: SymmetryType
     previous_pos_and_colors: Tuple[
         Tuple[Tuple[int, int], pg.Color], Tuple[Tuple[int, int], pg.Color]
-    ]
+    ] = None
 
     def execute(self) -> None:
         previous_pos_and_color = self.position, self.image.get_at(self.position)
