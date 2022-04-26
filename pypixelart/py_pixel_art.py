@@ -1,6 +1,7 @@
 import logging
 import pathlib
 import sys
+from typing import Iterable
 
 import click
 import pygame as pg
@@ -20,7 +21,6 @@ from pypixelart.utils import (
     draw_selected_color,
     draw_color_selection,
     draw_cursor_coordinates,
-    handle_input,
 )
 from pypixelart.constants import (
     GREY,
@@ -210,6 +210,21 @@ class PyPixelArt:
         pg.image.save(self.image, self.path)
         click.echo(f"Saved {self.path}")
 
+    def handle_input(self, keybindings: Iterable[KeyBinding]):
+        on_pressed_bindings = set(filter(lambda k: k.on_pressed, keybindings))
+        for binding in on_pressed_bindings:
+            if pg.key.get_pressed()[binding.keycode]:
+                binding.func()
+
+        not_on_pressed_keybindings = set(keybindings).difference(on_pressed_bindings)
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                sys.exit()
+
+            for binding in not_on_pressed_keybindings:
+                if event.type == pg.KEYDOWN and event.key == binding.keycode:
+                    binding.func()
+
     def run_loop(self):
         logging.info("Running loop")
 
@@ -287,7 +302,7 @@ class PyPixelArt:
                 cursor_coord_text_y=cursor_coords_text_rect.y,
             )
 
-            handle_input(self.keybindings)
+            self.handle_input(self.keybindings)
 
             if self.show_bindings:
                 draw_keybindings(self.keybindings, self.line_width)

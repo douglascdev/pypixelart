@@ -240,22 +240,6 @@ def new_text_surface(text: str, size: int = 12, color: pg.color.Color = BLACK):
     return font.render(text, False, color, None)
 
 
-def handle_input(keybindings: Iterable[KeyBinding]):
-    on_pressed_bindings = set(filter(lambda k: k.on_pressed, keybindings))
-    for binding in on_pressed_bindings:
-        if pg.key.get_pressed()[binding.keycode]:
-            binding.func()
-
-    not_on_pressed_keybindings = set(keybindings).difference(on_pressed_bindings)
-    for event in pg.event.get():
-        if event.type == pg.QUIT:
-            sys.exit()
-
-        for binding in not_on_pressed_keybindings:
-            if event.type == pg.KEYDOWN and event.key == binding.keycode:
-                binding.func()
-
-
 def rect_screen_center(
     rect: pg.Rect, center_x=False, center_y=False
 ) -> Tuple[int, int]:
