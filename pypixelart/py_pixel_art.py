@@ -27,7 +27,8 @@ from pypixelart.constants import (
     BLACK,
     WHITE,
     LIGHTER_GREY,
-    DEFAULT_BORDER_RADIUS, ALPHA,
+    DEFAULT_BORDER_RADIUS,
+    ALPHA,
 )
 
 
@@ -195,9 +196,7 @@ class PyPixelArt:
 
     def erase_pixel(self):
         x, y = map(int, self.cursor_position)
-        erase_command = DrawPixelAtCursor(
-            self.image, (x, y), ALPHA, self.symmetry
-        )
+        erase_command = DrawPixelAtCursor(self.image, (x, y), ALPHA, self.symmetry)
         self.command_controller.execute(erase_command)
 
     def undo(self):
