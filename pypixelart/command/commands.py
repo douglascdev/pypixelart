@@ -1,10 +1,10 @@
 import logging
 from dataclasses import dataclass
-from typing import Tuple, Union
+from typing import Tuple
 
 import pygame as pg
 
-from pypixelart.command import Command
+from pypixelart.command.command import Command
 from pypixelart.constants import ALPHA
 from pypixelart.symmetry_type import SymmetryType
 from pypixelart.utils import draw_pixel

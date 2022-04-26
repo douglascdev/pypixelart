@@ -1,14 +1,12 @@
 import logging
 import pathlib
 import sys
-from typing import List
 
 import click
 import pygame as pg
 
-from pypixelart.command import Command
-from pypixelart.commands import DrawPixelAtCursor, ErasePixelAtCursor
-from pypixelart.commandcontroller import CommandController
+from pypixelart.command.commands import DrawPixelAtCursor, ErasePixelAtCursor
+from pypixelart.command.controller import CommandController
 from pypixelart.keybinding import KeyBinding
 from pypixelart.symmetry_type import SymmetryType
 from pypixelart.utils import (
@@ -28,7 +26,6 @@ from pypixelart.constants import (
     GREY,
     BLACK,
     WHITE,
-    ALPHA,
     LIGHTER_GREY,
     DEFAULT_BORDER_RADIUS,
 )

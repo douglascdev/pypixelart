@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from pypixelart.command import Command
+from pypixelart.command.command import Command
 
 
 @dataclass
