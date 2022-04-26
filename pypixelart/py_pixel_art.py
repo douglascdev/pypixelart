@@ -112,23 +112,18 @@ class PyPixelArt:
             "yellow": pg.Color(251, 242, 54),
         }
 
-        self.help_keybinding = KeyBinding(
-            pg.K_SPACE, "Help", lambda: self.set_show_bindings()
-        )
-
-        zoom_g, cursor_g = "Zoom", "Move Cursor"
         self.keybindings = [
             KeyBinding(pg.K_i, "Draw", self.draw_pixel),
             KeyBinding(pg.K_x, "Erase", self.erase_pixel),
             KeyBinding(pg.K_u, "Undo", self.undo),
             KeyBinding(pg.K_r, "Redo", self.redo),
             KeyBinding(pg.K_w, "Save file", self.save),
-            KeyBinding(pg.K_n, zoom_g, lambda: self.set_zoom(True), on_pressed=True),
-            KeyBinding(pg.K_b, zoom_g, lambda: self.set_zoom(False), on_pressed=True),
-            KeyBinding(pg.K_k, cursor_g, lambda: self.move_cursor(0, -1)),
-            KeyBinding(pg.K_j, cursor_g, lambda: self.move_cursor(0, 1)),
-            KeyBinding(pg.K_l, cursor_g, lambda: self.move_cursor(1, 0)),
-            KeyBinding(pg.K_h, cursor_g, lambda: self.move_cursor(-1, 0)),
+            KeyBinding(pg.K_n, "Zoom", lambda: self.set_zoom(True), on_pressed=True),
+            KeyBinding(pg.K_b, "Zoom", lambda: self.set_zoom(False), on_pressed=True),
+            KeyBinding(pg.K_k, "Move cursor", lambda: self.move_cursor(0, -1)),
+            KeyBinding(pg.K_j, "Move cursor", lambda: self.move_cursor(0, 1)),
+            KeyBinding(pg.K_l, "Move cursor", lambda: self.move_cursor(1, 0)),
+            KeyBinding(pg.K_h, "Move cursor", lambda: self.move_cursor(-1, 0)),
             KeyBinding(pg.K_g, "Grid", self.set_grid),
             KeyBinding(pg.K_s, "Symmetry", self.set_symmetry),
             KeyBinding(pg.K_ESCAPE, "Exit", sys.exit),
@@ -143,6 +138,10 @@ class PyPixelArt:
             )
             for i, (name, color) in enumerate(self.palette_colors.items(), start=1)
         ]
+
+        self.help_keybinding = KeyBinding(
+            pg.K_SPACE, "Help", self.set_show_bindings
+        )
 
         self.keybindings += [self.help_keybinding]
 
