@@ -5,7 +5,7 @@ import sys
 import click
 import pygame as pg
 
-from pypixelart.command.commands import DrawPixelAtCursor, ErasePixelAtCursor
+from pypixelart.command.commands import DrawPixelAtCursor
 from pypixelart.command.controller import CommandController
 from pypixelart.keybinding import KeyBinding
 from pypixelart.symmetry_type import SymmetryType
@@ -27,7 +27,7 @@ from pypixelart.constants import (
     BLACK,
     WHITE,
     LIGHTER_GREY,
-    DEFAULT_BORDER_RADIUS,
+    DEFAULT_BORDER_RADIUS, ALPHA,
 )
 
 
@@ -195,8 +195,8 @@ class PyPixelArt:
 
     def erase_pixel(self):
         x, y = map(int, self.cursor_position)
-        erase_command = ErasePixelAtCursor(
-            self.image, (x, y), self.cursor_draw_color, self.symmetry
+        erase_command = DrawPixelAtCursor(
+            self.image, (x, y), ALPHA, self.symmetry
         )
         self.command_controller.execute(erase_command)
 

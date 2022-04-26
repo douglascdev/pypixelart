@@ -5,7 +5,6 @@ from typing import Tuple
 import pygame as pg
 
 from pypixelart.command import Command
-from pypixelart.constants import ALPHA
 from pypixelart.symmetry_type import SymmetryType
 from pypixelart.utils import draw_pixel
 
@@ -47,8 +46,3 @@ class DrawPixelAtCursor(Command):
 
     def redo(self) -> None:
         self.execute()
-
-
-@dataclass
-class ErasePixelAtCursor(DrawPixelAtCursor):
-    new_color = ALPHA
