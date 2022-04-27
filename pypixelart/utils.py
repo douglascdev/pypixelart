@@ -58,7 +58,7 @@ def draw_selected_color(
 def draw_color_selection(palette_colors: dict, line_width: int):
     """
     Draw in pygame's display surface a window showing all the colors available in the palette
-    and each of the corresponding keybinding
+    and each of their corresponding keybindings
     """
     screen = pg.display.get_surface()
     palette_rect = pg.Rect((0, 0), (screen.get_width() // 2, screen.get_height() // 2))
