@@ -1,7 +1,6 @@
 import logging
 import pathlib
 import sys
-from typing import Iterable
 
 import click
 import pygame as pg
@@ -9,13 +8,14 @@ import pygame as pg
 from pypixelart.command.commands import DrawPixelAtCursor
 from pypixelart.command.controller import CommandController
 from pypixelart.keybinding import KeyBinding
+from pypixelart.point import Point
 from pypixelart.symmetry_type import SymmetryType
 from pypixelart.utils import (
     draw_keybindings,
     draw_grid,
     draw_help_keybind,
     draw_header_text,
-    draw_resized_image,
+    draw_scaled_image,
     draw_rect_around_resized_img,
     draw_symmetry_line,
     draw_selected_color,
@@ -33,30 +33,43 @@ from pypixelart.constants import (
 
 
 class PyPixelArt:
+    """
+    PyPixelArt controls all the behaviour of the application. It keeps track of the state of the image and UI,
+    calls the corresponding methods when a keybinding is called, draws the UI on the screen, etc.
+    """
+
     def __init__(self, image: pg.Surface, path: pathlib.Path):
         logging.info(f"Instantiated PyPixelArt with path {path}")
 
-        self.image, self.path = image, path
+        self.image: pg.Surface = image
+        self.path: pathlib.Path = path
 
-        window_width, window_height = 600, 600
-        self.screen = pg.display.set_mode((window_width, window_height), pg.RESIZABLE)
-        self.app_name = click.get_current_context().command.name
+        window_width: int = 600
+        window_height: int = 600
+
+        self.screen: pg.Surface = pg.display.set_mode(
+            (window_width, window_height), pg.RESIZABLE
+        )
+        self.app_name: str = click.get_current_context().command.name
+
         pg.display.set_caption(self.app_name)
 
-        self.cursor_position = pg.Vector2(0, 0)
-        self.cursor_draw_color = WHITE
+        self.cursor_position: Point = Point(0, 0)
+        self.cursor_draw_color: pg.Color = WHITE
 
-        self.resized_img_rect = self.last_resized_img_rect = None
+        self.resized_img_rect: pg.Rect = None
+        self.last_resized_img_rect: pg.Rect = None
 
-        self.resized_img = self.rectangle_rect = None
+        self.resized_img: pg.Surface = None
+        self.rectangle_rect: pg.Rect = None
 
-        self.line_width = 4
-        self.cursor_line_width = self.line_width // 2
-        self.grid_line_width = 1
-        self.symmetry_line_width = 4
-        self.command_controller = CommandController()
+        self.line_width: int = 4
+        self.cursor_line_width: int = self.line_width // 2
+        self.grid_line_width: int = 1
+        self.symmetry_line_width: int = 4
+        self.command_controller: CommandController = CommandController()
 
-        self.clock = pg.time.Clock()
+        self.clock: pg.time.Clock = pg.time.Clock()
 
         """
         Get the biggest image dimension and take the inverse rule of 
@@ -79,6 +92,7 @@ class PyPixelArt:
 
         # Percent of zoom space that must be left for the rest of the UI
         margin_percent = 20
+
         # Remove margin_percent percent of the zoom value to leave room for the UI
         initial_zoom_percent = (initial_zoom_percent * (100 - margin_percent)) // 100
         logging.debug(
@@ -87,6 +101,7 @@ class PyPixelArt:
 
         # Set the step to 5% of the zoom
         zoom_step_percent = initial_zoom_percent // 20
+
         # Set it to 1 if the result of the division above was 0
         zoom_step_percent = 1 if zoom_step_percent == 0 else zoom_step_percent
         logging.debug(f"Zoom step initialized to {zoom_step_percent}")
@@ -97,12 +112,15 @@ class PyPixelArt:
             "changed": False,
         }
 
-        self.grid = False
-        self.color_selection = False
-        self.show_bindings = False
+        # Boolean variables checked in the run_loop method to determine which elements to draw in the screen
+        self.is_drawing_grid = False
+        self.is_drawing_color_selection = False
+        self.is_drawing_bindings = False
 
+        # Symmetry allows mirroring horizontally or vertically the changes done to the image
         self.symmetry = SymmetryType.NoSymmetry
 
+        # The palette of colors seen in color selection
         self.palette_colors = {
             "red": pg.Color(172, 50, 50),
             "cream": pg.Color(217, 160, 102),
@@ -112,6 +130,10 @@ class PyPixelArt:
             "yellow": pg.Color(251, 242, 54),
         }
 
+        """ 
+        Maps keycodes to the group they're displayed as on the help menu and 
+        the function it should call when the button is pressed
+        """
         self.keybindings = [
             KeyBinding(pg.K_i, "Draw", self.draw_pixel),
             KeyBinding(pg.K_x, "Erase", self.erase_pixel),
@@ -124,12 +146,17 @@ class PyPixelArt:
             KeyBinding(pg.K_j, "Move cursor", lambda: self.move_cursor(0, 1)),
             KeyBinding(pg.K_l, "Move cursor", lambda: self.move_cursor(1, 0)),
             KeyBinding(pg.K_h, "Move cursor", lambda: self.move_cursor(-1, 0)),
-            KeyBinding(pg.K_g, "Grid", self.set_grid),
+            KeyBinding(pg.K_g, "Grid", self.toggle_grid),
             KeyBinding(pg.K_s, "Symmetry", self.set_symmetry),
             KeyBinding(pg.K_q, "Exit", sys.exit),
-            KeyBinding(pg.K_c, "Color selection", self.set_color_selection),
+            KeyBinding(pg.K_c, "Color selection", self.toggle_color_selection),
         ]
 
+        """
+        Create a keybinding object for every color in the palette and assign a numeric
+        keycode starting from 1. Each number sets the current color to a color in the
+        palette.
+        """
         self.keybindings += [
             KeyBinding(
                 pg.key.key_code(str(i)),
@@ -139,12 +166,16 @@ class PyPixelArt:
             for i, (name, color) in enumerate(self.palette_colors.items(), start=1)
         ]
 
-        self.help_keybinding = KeyBinding(pg.K_SPACE, "Help", self.set_show_bindings)
+        self.help_keybinding = KeyBinding(pg.K_SPACE, "Help", self.toggle_show_bindings)
 
         self.keybindings += [self.help_keybinding]
 
-    def set_zoom(self, add_zoom: bool):
-        to_add = self.zoom["step"] if add_zoom else -self.zoom["step"]
+    def set_zoom(self, is_positive_step: bool):
+        """
+        Add one self.zoom["step"] percent of zoom if is_positive_step is True or subtract it
+        if is_positive_zoom is False
+        """
+        to_add = self.zoom["step"] if is_positive_step else -self.zoom["step"]
         if self.zoom["percent"] + to_add > 0:
             self.zoom["changed"] = True
             self.zoom["percent"] += to_add
@@ -158,12 +189,8 @@ class PyPixelArt:
         """
         new_x = (self.cursor_position.x + x) % self.image.get_width()
         new_y = (self.cursor_position.y + y) % self.image.get_height()
-        self.cursor_position.update(new_x, new_y)
-        logging.debug(f"Cursor position updated to ({int(new_x)}, {int(new_y)})")
-
-    def set_grid(self):
-        self.grid = not self.grid
-        logging.debug(f"Grid set to {self.grid}")
+        self.cursor_position = Point(new_x, new_y)
+        logging.debug(f"Cursor position updated to ({new_x}, {new_y})")
 
     def set_symmetry(self):
         self.symmetry = SymmetryType(
@@ -171,48 +198,91 @@ class PyPixelArt:
         )
         logging.debug(f"Symmetry set to {self.symmetry.name}")
 
-    def set_color_selection(self):
-        self.color_selection = not self.color_selection
-        logging.debug(f"Color selection set to {self.color_selection}")
+    def toggle_grid(self):
+        """
+        Toggle value of is_drawing_grid to determine whether to draw the grid
+        """
+        self.is_drawing_grid = not self.is_drawing_grid
+        logging.debug(f"Grid set to {self.is_drawing_grid}")
 
-    def set_show_bindings(self):
-        self.show_bindings = not self.show_bindings
-        logging.debug(f"Show bindings set to {self.show_bindings}")
+    def toggle_color_selection(self):
+        """
+        Toggle value of is_drawing_color_selection to determine whether to draw
+        the color selection menu
+        """
+        self.is_drawing_color_selection = not self.is_drawing_color_selection
+        logging.debug(f"Color selection set to {self.is_drawing_color_selection}")
+
+    def toggle_show_bindings(self):
+        """
+        Toggle value of is_drawing_keybindings to determine whether to draw
+        the menu that shows the available keybindings
+        """
+        self.is_drawing_bindings = not self.is_drawing_bindings
+        logging.debug(f"Show bindings set to {self.is_drawing_bindings}")
 
     def set_cursor_color(self, selected_color: pg.Color):
-        self.color_selection = False
+        """
+        Set the color used when drawing a pixel
+        """
+        self.is_drawing_color_selection = False
         self.cursor_draw_color = selected_color
         logging.debug(f"Cursor color set to {selected_color}")
 
     def draw_pixel(self):
-        x, y = map(int, self.cursor_position)
+        """
+        Draw a pixel in the image using the selected position and color attributes
+        """
         draw_command = DrawPixelAtCursor(
-            self.image, (x, y), self.cursor_draw_color, self.symmetry
+            self.image,
+            self.cursor_position.coordinates,
+            self.cursor_draw_color,
+            self.symmetry,
         )
         self.command_controller.execute(draw_command)
 
     def erase_pixel(self):
-        x, y = map(int, self.cursor_position)
-        erase_command = DrawPixelAtCursor(self.image, (x, y), ALPHA, self.symmetry)
+        """
+        Erase a pixel from the image using the selected position attributes.
+        In other words, draw an ALPHA pixel at the position attribute.
+        """
+        erase_command = DrawPixelAtCursor(
+            self.image, self.cursor_position.coordinates, ALPHA, self.symmetry
+        )
         self.command_controller.execute(erase_command)
 
     def undo(self):
+        """
+        Undo the last command to change the image
+        """
         self.command_controller.undo()
 
     def redo(self):
+        """
+        Redo the last command to be undone
+        """
         self.command_controller.redo()
 
     def save(self):
+        """
+        Save the image to the file in the path attribute
+        """
         pg.image.save(self.image, self.path)
         click.echo(f"Saved {self.path}")
 
-    def handle_input(self, keybindings: Iterable[KeyBinding]):
-        on_pressed_bindings = set(filter(lambda k: k.on_pressed, keybindings))
+    def handle_input(self):
+        """
+        Iterates over the list of Keybinding objects then for each of them, check if
+        the keycode was pressed and call it's corresponding function
+        """
+        on_pressed_bindings = set(filter(lambda k: k.on_pressed, self.keybindings))
         for binding in on_pressed_bindings:
             if pg.key.get_pressed()[binding.keycode]:
                 binding.func()
 
-        not_on_pressed_keybindings = set(keybindings).difference(on_pressed_bindings)
+        not_on_pressed_keybindings = set(self.keybindings).difference(
+            on_pressed_bindings
+        )
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 sys.exit()
@@ -246,7 +316,7 @@ class PyPixelArt:
                     border_radius=DEFAULT_BORDER_RADIUS,
                 )
 
-            self.resized_img, self.resized_img_rect = draw_resized_image(
+            self.resized_img, self.resized_img_rect = draw_scaled_image(
                 self.image, self.zoom["percent"]
             )
 
@@ -256,14 +326,13 @@ class PyPixelArt:
 
             cursor_width = self.resized_img_rect.w / self.image.get_rect().w
             cursor_height = self.resized_img_rect.h / self.image.get_rect().h
-            cursor_x, cursor_y = map(int, self.cursor_position)
             cursor_rect_xy = (
-                cursor_width * cursor_x + self.resized_img_rect.x,
-                cursor_height * cursor_y + self.resized_img_rect.y,
+                cursor_width * self.cursor_position.x + self.resized_img_rect.x,
+                cursor_height * self.cursor_position.y + self.resized_img_rect.y,
             )
             cursor_rect = (pg.Rect(cursor_rect_xy, (cursor_width, cursor_height)),)
 
-            if self.grid:
+            if self.is_drawing_grid:
                 where = self.resized_img.get_rect().move(
                     (self.resized_img_rect.x, self.resized_img_rect.y)
                 )
@@ -279,7 +348,7 @@ class PyPixelArt:
                 self.symmetry_line_width,
             )
 
-            cursor_image_color = BLACK if self.grid else WHITE
+            cursor_image_color = BLACK if self.is_drawing_grid else WHITE
             pg.draw.rect(
                 self.screen,
                 cursor_image_color,
@@ -288,7 +357,7 @@ class PyPixelArt:
             )
 
             cursor_coords_text_rect = draw_cursor_coordinates(
-                (cursor_x, cursor_y), self.rectangle_rect.topleft
+                self.cursor_position.coordinates, self.rectangle_rect.topleft
             )
 
             rect_top_right_corner_x, _ = self.rectangle_rect.topright
@@ -298,14 +367,14 @@ class PyPixelArt:
                 cursor_coord_text_y=cursor_coords_text_rect.y,
             )
 
-            self.handle_input(self.keybindings)
+            self.handle_input()
 
-            if self.show_bindings:
+            if self.is_drawing_bindings:
                 draw_keybindings(self.keybindings, self.line_width)
             else:
                 draw_help_keybind(self.help_keybinding, self.rectangle_rect)
 
-            if self.color_selection:
+            if self.is_drawing_color_selection:
                 draw_color_selection(self.palette_colors, self.line_width)
 
             pg.display.flip()

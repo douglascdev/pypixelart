@@ -13,6 +13,10 @@ from pypixelart.symmetry_type import SymmetryType
 def blit_text_to_screen(
     draw: Union[str, pg.Surface], coord: Union[Iterable, Tuple[int, int], pg.Rect]
 ):
+    """
+    Blit an existing text surface or create a new text surface for a text and blit
+    it to pygame's display surface at the specified coordinate
+    """
     surface = draw if isinstance(draw, pg.Surface) else new_text_surface(str(draw))
     pg.display.get_surface().blit(surface, coord)
 
@@ -20,6 +24,9 @@ def blit_text_to_screen(
 def draw_selected_color(
     color: pg.Color, rect_top_right_corner_x: int, cursor_coord_text_y: int
 ):
+    """
+    Draw in pygame's display surface what is the currently selected color by the user
+    """
     selected_color_text = new_text_surface("Color: ", color=WHITE)
     w, h = selected_color_text.get_width(), selected_color_text.get_height()
     selected_color_surface = pg.Surface(
@@ -49,6 +56,10 @@ def draw_selected_color(
 
 
 def draw_color_selection(palette_colors: dict, line_width: int):
+    """
+    Draw in pygame's display surface a window showing all the colors available in the palette
+    and each of the corresponding keybinding
+    """
     screen = pg.display.get_surface()
     palette_rect = pg.Rect((0, 0), (screen.get_width() // 2, screen.get_height() // 2))
     palette_surface = pg.Surface((palette_rect.w, palette_rect.h))
@@ -101,17 +112,26 @@ def draw_color_selection(palette_colors: dict, line_width: int):
     blit_text_to_screen(selection_title_surface, selection_title_rect)
 
 
-def draw_resized_image(image: pg.Surface, zoom: int) -> Tuple[pg.Surface, pg.Rect]:
-    resized_img = resize_surface_by_percentage(image, zoom)
-    resized_img_rect = pg.Rect(
-        rect_screen_center(resized_img.get_rect(), center_x=True, center_y=True),
-        (resized_img.get_width(), resized_img.get_height()),
+def draw_scaled_image(image: pg.Surface, percent: int) -> Tuple[pg.Surface, pg.Rect]:
+    """
+    Draw in pygame's display surface the image scaled to the specified percentage.
+    Return the scaled surface and it's Rect object.
+    """
+    scaled_img = scale_surface(image, percent)
+    scaled_img_rect = pg.Rect(
+        rect_screen_center(scaled_img.get_rect(), center_x=True, center_y=True),
+        (scaled_img.get_width(), scaled_img.get_height()),
     )
-    pg.display.get_surface().blit(resized_img, resized_img_rect)
-    return resized_img, resized_img_rect
+    pg.display.get_surface().blit(scaled_img, scaled_img_rect)
+    return scaled_img, scaled_img_rect
 
 
 def draw_symmetry_line(sym_type: SymmetryType, rect: pg.Rect, line_width: int):
+    """
+    Draw in pygame's display surface a line separating the middle of the image
+    vertically or horizontally depending on the symmetry type, to indicate to
+    the user how the symmetry is getting applied.
+    """
     if sym_type == SymmetryType.NoSymmetry:
         return
 
@@ -132,6 +152,9 @@ def draw_symmetry_line(sym_type: SymmetryType, rect: pg.Rect, line_width: int):
 
 
 def draw_grid(where: pg.Rect, size: Tuple[int, int], line_width: int):
+    """
+    Draw in pygame's display surface a grid around the pixels of the image
+    """
     rectangles_w, rectangles_h = size
     surface = pg.display.get_surface()
     for i in range(where.y + rectangles_h, where.y + where.h, rectangles_h):
@@ -141,6 +164,11 @@ def draw_grid(where: pg.Rect, size: Tuple[int, int], line_width: int):
 
 
 def draw_header_text(**kwargs):
+    """
+    Draw in pygame's display surface the header text with the name of the app,
+    the path of the image getting edited, width and height of the image and
+    the current zoom
+    """
     app_name, path_name, width, height, zoom = (
         kwargs.get(arg) for arg in ("app_name", "path_name", "width", "height", "zoom")
     )
@@ -153,6 +181,9 @@ def draw_header_text(**kwargs):
 def draw_rect_around_resized_img(
     resized_img: pg.Surface, resized_img_rect: pg.Rect, line_width: int
 ) -> pg.Rect:
+    """
+    Draw in pygame's display surface the rectangle displays a border around the image
+    """
     rectangle_x, rectangle_y = (
         resized_img_rect.x - line_width,
         resized_img_rect.y - line_width,
@@ -175,6 +206,9 @@ def draw_rect_around_resized_img(
 def draw_cursor_coordinates(
     cursor_coords: Tuple[int, int], rectangle_top_left_coord: Tuple[int, int]
 ) -> pg.Rect:
+    """
+    Draw in pygame's display surface the coordinates where the cursor is at in the image
+    """
     cursor_pixels_x, cursor_pixels_y = cursor_coords
     text = f"({cursor_pixels_x}, {cursor_pixels_y})"
     text_surface = new_text_surface(text, color=WHITE)
@@ -187,7 +221,10 @@ def draw_cursor_coordinates(
     return cursor_coords_text_rect
 
 
-def draw_keybindings(keybindings: Iterable[KeyBinding], line_width: int):
+def draw_keybindings(keybindings: Iterable[KeyBinding], line_width: int) -> None:
+    """
+    Draw in pygame's display surface all the available keybindings
+    """
     screen = pg.display.get_surface()
     grouped_bindings = itertools.groupby(keybindings, lambda b: b.group)
     keybindings_surface = pg.Surface(
@@ -223,7 +260,11 @@ def draw_keybindings(keybindings: Iterable[KeyBinding], line_width: int):
     screen.blit(keybindings_surface, keybindings_rect)
 
 
-def draw_help_keybind(help_binding: KeyBinding, rectangle_rect: pg.Rect):
+def draw_help_keybind(help_binding: KeyBinding, rectangle_rect: pg.Rect) -> None:
+    """
+    Draw in pygame's display surface what keybind the user has to press to show
+    all the other available keybindings
+    """
     binding_text_position = rectangle_rect.move(0, (rectangle_rect.h + 20))
     text = f"{help_binding.group}: {pg.key.name(help_binding.keycode)}"
     text_surface = new_text_surface(text, color=WHITE)
@@ -232,7 +273,12 @@ def draw_help_keybind(help_binding: KeyBinding, rectangle_rect: pg.Rect):
     blit_text_to_screen(text_surface, text_rect)
 
 
-def new_text_surface(text: str, size: int = 12, color: pg.color.Color = BLACK):
+def new_text_surface(
+    text: str, size: int = 12, color: pg.color.Color = BLACK
+) -> pg.Surface:
+    """
+    Return a pygame Surface with the rendering of the text using the specified size and the default font.
+    """
     default_font = (
         Path(__file__).parent / "assets" / "fonts" / "PressStart2P-Regular.ttf"
     ).resolve()
@@ -243,6 +289,10 @@ def new_text_surface(text: str, size: int = 12, color: pg.color.Color = BLACK):
 def rect_screen_center(
     rect: pg.Rect, center_x=False, center_y=False
 ) -> Tuple[int, int]:
+    """
+    Return tuple of positions that centralize the rect in the middle of pygame's display surface
+    for the x-axis, the y-axis or both.
+    """
     screen = pg.display.get_surface()
     rect = rect.copy()
 
@@ -255,7 +305,10 @@ def rect_screen_center(
     return rect.x, rect.y
 
 
-def resize_surface_by_percentage(surface: pg.Surface, percentage: int) -> pg.Surface:
+def scale_surface(surface: pg.Surface, percentage: int) -> pg.Surface:
+    """
+    Scale surface to a specified percentage of it
+    """
     new_image_resolution = [
         xy * percentage // 100 for xy in (surface.get_width(), surface.get_height())
     ]
@@ -269,7 +322,24 @@ def draw_pixel(
     symmetry_type: SymmetryType,
 ) -> Union[None, Tuple[Tuple[int, int], pg.Color]]:
     """
-    Return None if no symmetry is set. Else return position and color of symmetric pixel
+    Draw a pixel of the selected color at the determined position of image, taking symmetry type
+    into account to determine whether to and how to mirror the change done in position to its
+    symmetric pixel, horizontally or vertically.
+
+    For a coordinate (x, y) and an image of width and height (w, h) and considering
+    d is the difference between the middle width w / 2 and x, the coordinate for the
+    vertically symmetric pixel of (x, y) is (w / 2 + d, y), mirroring the pixel.
+
+    For a coordinate (x, y) and an image of width and height (w, h) and considering
+    d is the difference between middle height h / 2 and y, the coordinate for the
+    horizontally symmetric pixel of (x, y) is (x, h / 2 + d), mirroring the pixel.
+
+    In addition, integer division is used in the code to divide the height and width
+    to avoid getting float values when dividing odd values, and 1 has to be subtracted
+    to account for 0-indexing.
+
+    Return None if no symmetry is set.
+    Return position and color of symmetric pixel if SymmetryType is not NoSymmetry.
     """
     pixel_x, pixel_y = position
 
