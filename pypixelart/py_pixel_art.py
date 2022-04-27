@@ -139,9 +139,7 @@ class PyPixelArt:
             for i, (name, color) in enumerate(self.palette_colors.items(), start=1)
         ]
 
-        self.help_keybinding = KeyBinding(
-            pg.K_SPACE, "Help", self.set_show_bindings
-        )
+        self.help_keybinding = KeyBinding(pg.K_SPACE, "Help", self.set_show_bindings)
 
         self.keybindings += [self.help_keybinding]
 
