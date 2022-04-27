@@ -126,7 +126,7 @@ class PyPixelArt:
             KeyBinding(pg.K_h, "Move cursor", lambda: self.move_cursor(-1, 0)),
             KeyBinding(pg.K_g, "Grid", self.set_grid),
             KeyBinding(pg.K_s, "Symmetry", self.set_symmetry),
-            KeyBinding(pg.K_ESCAPE, "Exit", sys.exit),
+            KeyBinding(pg.K_q, "Exit", sys.exit),
             KeyBinding(pg.K_c, "Color selection", self.set_color_selection),
         ]
 
