@@ -273,23 +273,22 @@ def draw_pixel(
     """
     pixel_x, pixel_y = position
 
-    match symmetry_type:
-        case SymmetryType.NoSymmetry:
-            image.set_at(position, color)
-            return None
+    if symmetry_type is SymmetryType.NoSymmetry:
+        image.set_at(position, color)
+        return None
 
-        case SymmetryType.Vertical:
-            image.set_at(position, color)
-            middle_w = image.get_width() // 2
-            symmetric_draw_pos = (middle_w + (middle_w - pixel_x) - 1, pixel_y)
-            symmetric_pos_color = image.get_at(symmetric_draw_pos)
-            image.set_at(symmetric_draw_pos, color)
-            return symmetric_draw_pos, symmetric_pos_color
+    elif symmetry_type is SymmetryType.Vertical:
+        image.set_at(position, color)
+        middle_w = image.get_width() // 2
+        symmetric_draw_pos = (middle_w + (middle_w - pixel_x) - 1, pixel_y)
+        symmetric_pos_color = image.get_at(symmetric_draw_pos)
+        image.set_at(symmetric_draw_pos, color)
+        return symmetric_draw_pos, symmetric_pos_color
 
-        case SymmetryType.Horizontal:
-            image.set_at(position, color)
-            middle_h = image.get_height() // 2
-            symmetric_draw_pos = (pixel_x, middle_h + (middle_h - pixel_y) - 1)
-            symmetric_pos_color = image.get_at(symmetric_draw_pos)
-            image.set_at(symmetric_draw_pos, color)
-            return symmetric_draw_pos, symmetric_pos_color
+    elif symmetry_type is SymmetryType.Horizontal:
+        image.set_at(position, color)
+        middle_h = image.get_height() // 2
+        symmetric_draw_pos = (pixel_x, middle_h + (middle_h - pixel_y) - 1)
+        symmetric_pos_color = image.get_at(symmetric_draw_pos)
+        image.set_at(symmetric_draw_pos, color)
+        return symmetric_draw_pos, symmetric_pos_color
