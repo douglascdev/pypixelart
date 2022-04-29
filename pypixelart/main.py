@@ -5,57 +5,114 @@ from pathlib import Path
 
 import click
 from PyQt6.QtGui import QImage, QPixmap, QKeySequence, QShortcut, QColor
-from PyQt6.QtWidgets import QApplication, QLineEdit, QLabel, QStatusBar
-from PyQt6 import QtWidgets, uic
+from PyQt6.QtWidgets import QApplication, QLineEdit, QLabel, QStatusBar, QMainWindow
+from PyQt6 import uic
 
 from pypixelart.constants import QT_UI_PATH, COMMAND_PREFIX
 
 
-class PyPixelArtWindow(QtWidgets.QMainWindow):
-    @dataclass
-    class Zoom:
-        percent: int
-        percent_change_step: int
-        changed: int
+""" 
+Indicate whether the code is running as an application, showing 
+the main window and all the Qt user interface elements or act like
+a library executing methods in a supplied image.
+"""
+IS_RUNNING_AS_APPLICATION: bool = __name__ == "__main__"
 
-    @dataclass
-    class Overlay:
-        overlay_image: QImage
-        is_drawing_color_selection: bool
-        is_drawing_grid: bool
-        is_drawing_help: bool
+
+def run_if_application(function):
+    """
+    Decorator for methods that should only run when the code
+    is running as an application, mostly the ones relating to
+    Ui stuff.
+    """
+    def wrapper(*args):
+        if IS_RUNNING_AS_APPLICATION:
+            function(*args)
+
+    return wrapper
+
+
+@dataclass
+class Zoom:
+    percent: int
+    percent_change_step: int
+    changed: int
+
+
+@dataclass
+class Overlay:
+    overlay_image: QImage
+    is_drawing_color_selection: bool
+    is_drawing_grid: bool
+    is_drawing_help: bool
+
+
+class PyPixelArt:
 
     image: QImage
     image_resized_preview: QLabel
     command_input: QLineEdit
     command_output: QStatusBar
+    main_window = QMainWindow
 
     def __init__(self, image_path: Path, image: QImage):
-        super(PyPixelArtWindow, self).__init__()
-
-        self._load_window_qt_ui()
-
-        self._hide_command_ui_elements()
-
+        # General initializations, always executed
         self._initialize_image_attributes(image_path, image)
-        self._initialize_overlay_variables()
         self._initialize_command_function_dict()
+
+        # Methods only executed when running as application
+        self._initialize_qt_window_ui()
+        self._initialize_overlay_variables()
         self._initialize_shortcuts()
         self._initialize_zoom()
 
         self._update_window_title()
         self._update_image_preview()
 
-        self.show()
+        self._show_main_window()
 
-    def _load_window_qt_ui(self):
+    def _initialize_image_attributes(self, image_path: Path, image: QImage):
+        """
+        Initialize attributes to hold the values of the image and image_path
+        passed as argument to the class constructor.
+
+        The QImage class is used because of its capabilities for direct pixel
+        access and manipulation
+        """
+        self.image_path: Path = image_path
+        self.image: QImage = image
+
+    def _initialize_command_function_dict(self):
+        """
+        The command-function dict maps each command to it's corresponding
+        function.
+
+        When a command is executed, this value is used to search for it,
+        and the function in the value is then called if the command is
+        in the dict.
+        """
+        self.command_function_dict = {
+            # Quit the application
+            f"{COMMAND_PREFIX}q": sys.exit,
+
+            # Toggle drawing the grid
+            f"{COMMAND_PREFIX}grid": self._toggle_grid_overlay,
+        }
+
+    @run_if_application
+    def _initialize_qt_window_ui(self):
         """
         Load the Qt form file describing the elements contained in the application's
-        window.
+        window and initialize the attributes corresponding to each ui element
         """
-        uic.loadUi(Path(QT_UI_PATH / "mainwindow.ui"), self)
+        self.main_window: QMainWindow = QMainWindow()
+        uic.loadUi(Path(QT_UI_PATH / "mainwindow.ui"), self.main_window)
+        window = self.main_window
 
-    def _hide_command_ui_elements(self):
+        self.command_input: QLineEdit = window.command_input
+        self.command_output: QStatusBar = window.command_output
+        self.image_resized_preview: QLabel = window.image_resized_preview
+
         """
         Hide the input field for commands and the output, as the field should only be drawn
         after the user presses a keyboard shortcut to show it and the visible value cannot
@@ -64,17 +121,7 @@ class PyPixelArtWindow(QtWidgets.QMainWindow):
         self.command_input.setVisible(False)
         self.command_output.setVisible(False)
 
-    def _initialize_image_attributes(self, image_path: Path, image: QImage):
-        """
-        Initialize attributes to hold the values of the image and image_path
-        passed as argument to the window's constructor.
-
-        The QImage class is used because of it's capabilities for direct pixel
-        access and manipulation
-        """
-        self.image_path: Path = image_path
-        self.image: QImage = image
-
+    @run_if_application
     def _initialize_overlay_variables(self):
         """
         Initialize the overlay variables. The overlay is an image where elements that are not
@@ -89,36 +136,23 @@ class PyPixelArtWindow(QtWidgets.QMainWindow):
         overlay_image: QImage = QImage(self.image.size(), self.image.format())
         overlay_image.fill(QColor("alpha"))
 
-        self.overlay = self.Overlay(
+        self.overlay = Overlay(
             overlay_image=overlay_image,
             is_drawing_grid=False,
             is_drawing_color_selection=False,
             is_drawing_help=False,
         )
 
-    def _initialize_command_function_dict(self):
-        """
-        The command-function dict maps each command to it's corresponding
-        function.
-
-        When a command is executed, this value is used to search for it,
-        and the function in the value is then called if the command is
-        in the dict.
-        """
-        self.command_function_dict = {
-            f"{COMMAND_PREFIX}q": sys.exit,  # Quit the application
-            f"{COMMAND_PREFIX}grid": self._toggle_grid_overlay,  # Toggle drawing the grid
-        }
-
     # def _draw_polygon(self):
     #     self.image.paintEngine().drawPolygon()
 
+    @run_if_application
     def _initialize_shortcuts(self):
         # Shortcuts to open the command input
-        QShortcut(QKeySequence("escape"), self, self._toggle_command_input)
-        QShortcut(QKeySequence("ctrl+c"), self, self._toggle_command_input)
+        QShortcut(QKeySequence("escape"), self.main_window, self._toggle_command_input)
+        QShortcut(QKeySequence("ctrl+c"), self.main_window, self._toggle_command_input)
         QShortcut(
-            QKeySequence(COMMAND_PREFIX), self, self._toggle_command_input_add_prefix
+            QKeySequence(COMMAND_PREFIX), self.main_window, self._toggle_command_input_add_prefix
         )
 
         # Command input shortcuts to execute the command
@@ -129,10 +163,11 @@ class PyPixelArtWindow(QtWidgets.QMainWindow):
             QKeySequence("enter"), self.command_input, self._execute_input_command
         )
 
+    @run_if_application
     def _initialize_zoom(self):
 
         image = self.image
-        window_width, window_height = self.width(), self.height()
+        window_width, window_height = self.main_window.width(), self.main_window.height()
 
         """
         Get the biggest image dimension and take the inverse rule of
@@ -169,23 +204,26 @@ class PyPixelArtWindow(QtWidgets.QMainWindow):
         zoom_step_percent = 1 if zoom_step_percent == 0 else zoom_step_percent
         logging.debug(f"Zoom step initialized to {zoom_step_percent}")
 
-        self.zoom = self.Zoom(
+        self.zoom = Zoom(
             percent=initial_zoom_percent,
             percent_change_step=zoom_step_percent,
             changed=False,
         )
 
+    @run_if_application
     def _update_window_title(self):
         app_name = click.get_current_context().command.name
         filename = self.image_path.name
         image_width, image_height = self.image.width(), self.image.height()
-        self.setWindowTitle(
+        self.main_window.setWindowTitle(
             f"{app_name}: {filename} ({image_width}x{image_height}) {self.zoom.percent}%"
         )
 
+    @run_if_application
     def _update_image_preview(self):
         self.image_resized_preview.setPixmap(QPixmap.fromImage(self.image))
 
+    @run_if_application
     def _execute_input_command(self):
         input_command = self.command_input.text()
 
@@ -201,10 +239,12 @@ class PyPixelArtWindow(QtWidgets.QMainWindow):
 
         self._toggle_command_input()
 
+    @run_if_application
     def _toggle_grid_overlay(self):
         self.overlay.is_drawing_grid = not self.overlay.is_drawing_grid
         logging.info("Toggled grid")
 
+    @run_if_application
     def _toggle_command_input(self):
         self.command_input.setVisible(not self.command_input.isVisible())
 
@@ -217,12 +257,17 @@ class PyPixelArtWindow(QtWidgets.QMainWindow):
             self.command_input.setFocus()
         else:
             logging.info(f"Command input set to invisible, focusing on window")
-            self.setFocus()
+            self.main_window.setFocus()
 
+    @run_if_application
     def _toggle_command_input_add_prefix(self):
         logging.info("Toggling command input and adding prefix")
         self._toggle_command_input()
         self.command_input.setText(COMMAND_PREFIX)
+
+    @run_if_application
+    def _show_main_window(self):
+        self.main_window.show()
 
 
 def print_welcome_msg(func):
@@ -290,10 +335,9 @@ def main(filepath, resolution, debug):
         image.fill(QColor("grey"))
 
     app = QApplication(sys.argv)
-    main_window = PyPixelArtWindow(path, image)
-    main_window.show()
+    main_window = PyPixelArt(path, image)
     sys.exit(app.exec())
 
 
-if __name__ == "__main__":
+if IS_RUNNING_AS_APPLICATION:
     main()
