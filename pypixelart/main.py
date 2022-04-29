@@ -203,7 +203,7 @@ class PyPixelArtWindow(QtWidgets.QMainWindow):
         self._toggle_command_input()
 
     def _toggle_grid_overlay(self):
-        self.image_overlay.
+        self.overlay.is_drawing_grid = not self.overlay.is_drawing_grid
         logging.info("Toggled grid")
 
     def _toggle_command_input(self):
