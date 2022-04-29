@@ -3,33 +3,34 @@ import pathlib
 import sys
 
 import click
-import pygame as pg
 
-from pypixelart.command.commands import DrawPixelAtCursor
-from pypixelart.command.controller import CommandController
-from pypixelart.keybinding import KeyBinding
-from pypixelart.point import Point
-from pypixelart.symmetry_type import SymmetryType
-from pypixelart.utils import (
-    draw_keybindings,
-    draw_grid,
-    draw_help_keybind,
-    draw_header_text,
-    draw_scaled_image,
-    draw_rect_around_resized_img,
-    draw_symmetry_line,
-    draw_selected_color,
-    draw_color_selection,
-    draw_cursor_coordinates,
-)
-from pypixelart.constants import (
-    GREY,
-    BLACK,
-    WHITE,
-    LIGHTER_GREY,
-    DEFAULT_BORDER_RADIUS,
-    ALPHA,
-)
+# import pygame as pg
+
+# from pypixelart.command.commands import DrawPixelAtCursor
+# from pypixelart.command.controller import CommandController
+# from pypixelart.keybinding import KeyBinding
+# from pypixelart.point import Point
+# from pypixelart.symmetry_type import SymmetryType
+# from pypixelart.utils import (
+#     draw_keybindings,
+#     draw_grid,
+#     draw_help_keybind,
+#     draw_header_text,
+#     draw_scaled_image,
+#     draw_rect_around_resized_img,
+#     draw_symmetry_line,
+#     draw_selected_color,
+#     draw_color_selection,
+#     draw_cursor_coordinates,
+# )
+# from pypixelart.constants import (
+#     GREY,
+#     BLACK,
+#     WHITE,
+#     LIGHTER_GREY,
+#     DEFAULT_BORDER_RADIUS,
+#     ALPHA,
+# )
 
 
 class PyPixelArt:
@@ -38,9 +39,9 @@ class PyPixelArt:
     calls the corresponding methods when a keybinding is called, draws the UI on the screen, etc.
     """
 
-    def __init__(self, image: pg.Surface, path: pathlib.Path):
+    def __init__(self, image, path: pathlib.Path):
         logging.info(f"Instantiated PyPixelArt with path {path}")
-
+        """
         self.image: pg.Surface = image
         self.path: pathlib.Path = path
 
@@ -70,12 +71,11 @@ class PyPixelArt:
         self.command_controller: CommandController = CommandController()
 
         self.clock: pg.time.Clock = pg.time.Clock()
-
         """
-        Get the biggest image dimension and take the inverse rule of 
-        three between the corresponding window dimension, 100 and the 
-        image dimension to get the appropriate zoom that keeps the 
-        image in the screen
+        # Get the biggest image dimension and take the inverse rule of
+        # three between the corresponding window dimension, 100 and the
+        # image dimension to get the appropriate zoom that keeps the
+        # image in the screen
         """
         if image.get_width() > image.get_height():
             logging.debug(
@@ -130,10 +130,8 @@ class PyPixelArt:
             "yellow": pg.Color(251, 242, 54),
         }
 
-        """ 
         Maps keycodes to the group they're displayed as on the help menu and 
         the function it should call when the button is pressed
-        """
         self.keybindings = [
             KeyBinding(pg.K_i, "Draw", self.draw_pixel),
             KeyBinding(pg.K_x, "Erase", self.erase_pixel),
@@ -152,11 +150,9 @@ class PyPixelArt:
             KeyBinding(pg.K_c, "Color selection", self.toggle_color_selection),
         ]
 
-        """
         Create a keybinding object for every color in the palette and assign a numeric
         keycode starting from 1. Each number sets the current color to a color in the
         palette.
-        """
         self.keybindings += [
             KeyBinding(
                 pg.key.key_code(str(i)),
@@ -169,12 +165,17 @@ class PyPixelArt:
         self.help_keybinding = KeyBinding(pg.K_SPACE, "Help", self.toggle_show_bindings)
 
         self.keybindings += [self.help_keybinding]
-
-    def set_zoom(self, is_positive_step: bool):
         """
+
+    # def build(self):
+    #     return PongGame()
+
+    """
+    def set_zoom(self, is_positive_step: bool):
+        
         Add one self.zoom["step"] percent of zoom if is_positive_step is True or subtract it
         if is_positive_zoom is False
-        """
+        
         to_add = self.zoom["step"] if is_positive_step else -self.zoom["step"]
         if self.zoom["percent"] + to_add > 0:
             self.zoom["changed"] = True
@@ -182,11 +183,11 @@ class PyPixelArt:
             logging.debug(f"Zoom changed by {to_add} to {self.zoom['percent']}")
 
     def move_cursor(self, x: int, y: int):
-        """
+        
         Add x and y to existing coordinates and divide by width/height to avoid going out of grid.
         When added x at the end, goes back to beginning. When subtracting at x=0, goes to the end.
         Same applies for y.
-        """
+        
         new_x = (self.cursor_position.x + x) % self.image.get_width()
         new_y = (self.cursor_position.y + y) % self.image.get_height()
         self.cursor_position = Point(new_x, new_y)
@@ -199,40 +200,40 @@ class PyPixelArt:
         logging.debug(f"Symmetry set to {self.symmetry.name}")
 
     def toggle_grid(self):
-        """
+        
         Toggle value of is_drawing_grid to determine whether to draw the grid
-        """
+        
         self.is_drawing_grid = not self.is_drawing_grid
         logging.debug(f"Grid set to {self.is_drawing_grid}")
 
     def toggle_color_selection(self):
-        """
+        
         Toggle value of is_drawing_color_selection to determine whether to draw
         the color selection menu
-        """
+        
         self.is_drawing_color_selection = not self.is_drawing_color_selection
         logging.debug(f"Color selection set to {self.is_drawing_color_selection}")
 
     def toggle_show_bindings(self):
-        """
+        
         Toggle value of is_drawing_keybindings to determine whether to draw
         the menu that shows the available keybindings
-        """
+        
         self.is_drawing_bindings = not self.is_drawing_bindings
         logging.debug(f"Show bindings set to {self.is_drawing_bindings}")
 
     def set_cursor_color(self, selected_color: pg.Color):
-        """
+        
         Set the color used when drawing a pixel
-        """
+        
         self.is_drawing_color_selection = False
         self.cursor_draw_color = selected_color
         logging.debug(f"Cursor color set to {selected_color}")
 
     def draw_pixel(self):
-        """
+        
         Draw a pixel in the image using the selected position and color attributes
-        """
+        
         draw_command = DrawPixelAtCursor(
             self.image,
             self.cursor_position.coordinates,
@@ -242,39 +243,39 @@ class PyPixelArt:
         self.command_controller.execute(draw_command)
 
     def erase_pixel(self):
-        """
+        
         Erase a pixel from the image using the selected position attributes.
         In other words, draw an ALPHA pixel at the position attribute.
-        """
+        
         erase_command = DrawPixelAtCursor(
             self.image, self.cursor_position.coordinates, ALPHA, self.symmetry
         )
         self.command_controller.execute(erase_command)
 
     def undo(self):
-        """
+        
         Undo the last command to change the image
-        """
+        
         self.command_controller.undo()
 
     def redo(self):
-        """
+        
         Redo the last command to be undone
-        """
+        
         self.command_controller.redo()
 
     def save(self):
-        """
+        
         Save the image to the file in the path attribute
-        """
+        
         pg.image.save(self.image, self.path)
         click.echo(f"Saved {self.path}")
 
     def handle_input(self):
-        """
+        
         Iterates over the list of Keybinding objects then for each of them, check if
         the keycode was pressed and call it's corresponding function
-        """
+        
         on_pressed_bindings = set(filter(lambda k: k.on_pressed, self.keybindings))
         for binding in on_pressed_bindings:
             if pg.key.get_pressed()[binding.keycode]:
@@ -290,11 +291,14 @@ class PyPixelArt:
             for binding in not_on_pressed_keybindings:
                 if event.type == pg.KEYDOWN and event.key == binding.keycode:
                     binding.func()
+    """
 
     def run_loop(self):
         logging.info("Running loop")
 
         while True:
+
+            """
             self.screen.fill(GREY)
 
             draw_header_text(
@@ -380,3 +384,4 @@ class PyPixelArt:
             pg.display.flip()
 
             self.clock.tick(60)
+            """
