@@ -12,7 +12,6 @@ from pypixelart.constants import QT_UI_PATH, COMMAND_PREFIX
 
 
 class PyPixelArtWindow(QtWidgets.QMainWindow):
-
     @dataclass
     class Zoom:
         percent: int
@@ -94,7 +93,7 @@ class PyPixelArtWindow(QtWidgets.QMainWindow):
             overlay_image=overlay_image,
             is_drawing_grid=False,
             is_drawing_color_selection=False,
-            is_drawing_help=False
+            is_drawing_help=False,
         )
 
     def _initialize_command_function_dict(self):
