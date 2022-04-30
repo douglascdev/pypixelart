@@ -2,6 +2,7 @@ import sys
 import logging
 from dataclasses import dataclass
 from pathlib import Path
+from typing import List, Callable, Set, Tuple, Dict
 
 import click
 from PyQt6.QtGui import QImage, QPixmap, QKeySequence, QShortcut, QColor
@@ -9,7 +10,7 @@ from PyQt6.QtWidgets import QApplication, QLineEdit, QLabel, QStatusBar, QMainWi
 from PyQt6 import uic
 
 from pypixelart.constants import QT_UI_PATH, COMMAND_PREFIX
-
+from pypixelart.point import Point
 
 """ 
 Indicate whether the code is running as an application, showing 
@@ -32,6 +33,18 @@ def run_if_application(function):
     return wrapper
 
 
+def command(command_dict: Dict[str, Callable], *command_aliases):
+    """
+    Decorator that inserts methods as commands
+    """
+
+    def wrapper(function):
+        for alias in command_aliases:
+            command_dict[f"{COMMAND_PREFIX}{alias}"] = function
+
+    return wrapper
+
+
 @dataclass
 class Zoom:
     percent: int
@@ -47,18 +60,29 @@ class Overlay:
     is_drawing_help: bool
 
 
+@dataclass
+class Cursor:
+    position = Point(0, 0)
+    color = QColor("white")
+
+
 class PyPixelArt:
 
     image: QImage
+    image_path: Path
     image_resized_preview: QLabel
     command_input: QLineEdit
     command_output: QStatusBar
-    main_window = QMainWindow
+    command_to_function_map: Dict[str, Callable] = dict()
+    cursor: Cursor
+    main_window: QMainWindow
+    overlay: Overlay
+    zoom: Zoom
 
     def __init__(self, image_path: Path, image: QImage):
         # General initializations, always executed
         self._initialize_image_attributes(image_path, image)
-        self._initialize_command_function_dict()
+        self._initialize_cursor()
 
         # Methods only executed when running as application
         self._initialize_qt_window_ui()
@@ -82,22 +106,8 @@ class PyPixelArt:
         self.image_path: Path = image_path
         self.image: QImage = image
 
-    def _initialize_command_function_dict(self):
-        """
-        The command-function dict maps each command to it's corresponding
-        function.
-
-        When a command is executed, this value is used to search for it,
-        and the function in the value is then called if the command is
-        in the dict.
-        """
-        self.command_function_dict = {
-            # Quit the application
-            f"{COMMAND_PREFIX}q": sys.exit,
-
-            # Toggle drawing the grid
-            f"{COMMAND_PREFIX}grid": self._toggle_grid_overlay,
-        }
+    def _initialize_cursor(self):
+        self.cursor = Cursor()
 
     @run_if_application
     def _initialize_qt_window_ui(self):
@@ -107,11 +117,10 @@ class PyPixelArt:
         """
         self.main_window: QMainWindow = QMainWindow()
         uic.loadUi(Path(QT_UI_PATH / "mainwindow.ui"), self.main_window)
-        window = self.main_window
 
-        self.command_input: QLineEdit = window.command_input
-        self.command_output: QStatusBar = window.command_output
-        self.image_resized_preview: QLabel = window.image_resized_preview
+        self.command_input = self.main_window.command_input
+        self.command_output = self.main_window.command_output
+        self.image_resized_preview = self.main_window.image_resized_preview
 
         """
         Hide the input field for commands and the output, as the field should only be drawn
@@ -225,14 +234,31 @@ class PyPixelArt:
 
     @run_if_application
     def _execute_input_command(self):
-        input_command = self.command_input.text()
+        command_text = self.command_input.text()
 
-        if input_command in self.command_function_dict:
-            logging.info(f"Command {input_command} found, executing.")
-            self.command_function_dict[input_command]()
+        if not command_text:
+            logging.info("Tried to execute nothing as a command input")
+            self.command_output.showMessage("Command not found.")
+            self.command_output.setVisible(True)
+            return
+
+        command_name, *command_args = command_text.split()
+
+        if command_name in self.command_to_function_map:
+            logging.info(f"Command {command_name} found, now executing.")
+
+            if command_args:
+                result = self.command_to_function_map[command_name](self, command_args)
+            else:
+                result = self.command_to_function_map[command_name](self)
+
+            logging.debug(f"Command result: \"{result}\"")
+
+            self.command_output.setVisible(True)
+            self.command_output.showMessage(result)
         else:
             logging.info(
-                f"Command {input_command} was not found, showing error output."
+                f"Command {command_name} was not found, showing error output."
             )
             self.command_output.showMessage("Command not found.")
             self.command_output.setVisible(True)
@@ -240,9 +266,8 @@ class PyPixelArt:
         self._toggle_command_input()
 
     @run_if_application
-    def _toggle_grid_overlay(self):
-        self.overlay.is_drawing_grid = not self.overlay.is_drawing_grid
-        logging.info("Toggled grid")
+    def _show_main_window(self):
+        self.main_window.show()
 
     @run_if_application
     def _toggle_command_input(self):
@@ -266,8 +291,49 @@ class PyPixelArt:
         self.command_input.setText(COMMAND_PREFIX)
 
     @run_if_application
-    def _show_main_window(self):
-        self.main_window.show()
+    @command(command_to_function_map, "grid")
+    def _toggle_grid_overlay(self):
+        self.overlay.is_drawing_grid = not self.overlay.is_drawing_grid
+        logging.info("Toggled grid")
+
+    @command(command_to_function_map, "q")
+    def _quit(self):
+        sys.exit()
+
+    @command(command_to_function_map, "w")
+    def _save_image(self) -> str:
+        logging.debug(f"Saving image: \"{self.image_path}\"")
+
+        try:
+            image_path_str = str(self.image_path)
+            self.image.save(image_path_str)
+            return f"Image successfully saved to \"{image_path_str}\"."
+
+        except Exception as exception:
+            logging.exception(exception)
+            return "An error occurred when trying to save the file."
+
+    @command(command_to_function_map, "c")
+    def _set_cursor_color(self, color=None) -> str:
+        logging.info(f"Setting cursor color")
+
+        try:
+            # Color is passed as a list, so get the first element as color
+            color = next(iter(color))
+        except Exception:
+            # If there are no arguments, just show the current color
+            return f"Current color is \"{self.cursor.color.name()}\"."
+
+        try:
+            self.cursor.color = QColor(color)
+
+            if not self.cursor.color.isValid():
+                raise Exception(f"Invalid color \"{self.cursor.color}\"")
+
+            return f"Color successfully set to \"{color}\""
+        except Exception as exception:
+            logging.exception(exception)
+            return f"Failed to set color to \"{color}\""
 
 
 def print_welcome_msg(func):
